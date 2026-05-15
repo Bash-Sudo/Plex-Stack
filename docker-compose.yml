@@ -104,37 +104,20 @@ services:
       - 5055:5055
     restart: unless-stopped
 
-  # ── qBittorrent + VPN ─────────────────────────────────────────────────────
+  # ── qBittorrent ───────────────────────────────────────────────────────────
+  # VPN-enabled version available via docker-compose.vpn.yml override
   qbit-vpn:
-    image: binhex/arch-qbittorrentvpn:latest
+    image: lscr.io/linuxserver/qbittorrent:latest
     container_name: qbit-vpn
-    network_mode: bridge
-    cap_add:
-      - NET_ADMIN
     environment:
-      - PUID=0
-      - PGID=0
-      - UMASK=000
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
       - TZ=${TZ:-UTC}
       - WEBUI_PORT=8080
-      - VPN_ENABLED=${VPN_ENABLED:-yes}
-      - VPN_USER=${VPN_USER}
-      - VPN_PASS=${VPN_PASS}
-      - VPN_PROV=${VPN_PROV:-pia}
-      - VPN_CLIENT=${VPN_CLIENT:-wireguard}
-      - STRICT_PORT_FORWARD=yes
-      - LAN_NETWORK=${LAN_NETWORK:-192.168.1.0/24}
-      - ENABLE_STARTUP_SCRIPTS=no
-      - NAME_SERVERS=1.1.1.1,1.0.0.1
-      - ENABLE_PRIVOXY=yes
-    sysctls:
-      - net.ipv4.conf.all.src_valid_mark=1
-    privileged: true
     ports:
       - 8080:8080
-      - 8118:8118
-      - 58946:58946
-      - 58946:58946/udp
+      - 6881:6881
+      - 6881:6881/udp
     volumes:
       - ${BASE_PATH:-/tmp}/qbittorrent/config:/config
       - ${MEDIA_SHARE:-/tmp}:/data
