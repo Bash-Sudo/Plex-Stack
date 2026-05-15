@@ -1,0 +1,25 @@
+# Prefetcharr — auto-download next episodes while you watch
+# Copy this file to config.toml and fill in your API keys.
+# The setup wizard fills this in automatically.
+
+interval            = 900    # Check every 15 minutes
+log_dir             = "/log"
+log_level           = "Info"
+prefetch_num        = 2      # Pre-fetch when this many episodes remain
+request_seasons     = true
+append_to_queue     = false
+connection_retries  = 6
+
+[media_server]
+type    = "Plex"
+url     = "http://plex:32400"
+api_key = ""                 # Your Plex token — set via control panel
+
+# users     = [ "YourName" ]   # Optional: watch specific users only
+# libraries = [ "TV Shows" ]   # Optional: watch specific libraries only
+
+[sonarr]
+url     = "http://sonarr:8989"
+api_key = ""                 # Sonarr -> Settings -> General -> API Key
+
+# exclude_tag = "no_prefetch" # Optional: tag series to exclude

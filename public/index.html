@@ -1,0 +1,1076 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Plex Stack Control Panel</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0f172a;--surf:#1e293b;--surf2:#263042;--border:#334155;
+  --text:#e2e8f0;--muted:#94a3b8;--primary:#e5a00d;--primary-h:#c98b09;
+  --green:#22c55e;--red:#ef4444;--yellow:#f59e0b;--blue:#38bdf8;
+  --radius:10px;--font:system-ui,-apple-system,BlinkMacSystemFont,sans-serif;
+}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column}
+
+/* ── Nav ── */
+nav{background:var(--surf);border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;gap:0;height:52px;flex-shrink:0}
+.nav-brand{font-size:15px;font-weight:700;margin-right:24px;white-space:nowrap}
+.nav-brand em{color:var(--primary);font-style:normal}
+.nav-tabs{display:flex;gap:2px;flex:1}
+.tab{background:none;border:none;color:var(--muted);padding:0 16px;height:52px;font-size:13px;font-weight:500;cursor:pointer;border-bottom:2px solid transparent;font-family:var(--font);transition:color .15s,border-color .15s}
+.tab:hover{color:var(--text)}
+.tab.active{color:var(--primary);border-bottom-color:var(--primary)}
+#run-badge{background:var(--surf2);border:1px solid var(--border);border-radius:20px;padding:3px 12px;font-size:12px;font-weight:600;white-space:nowrap}
+#run-badge.all-good{border-color:var(--green);color:var(--green)}
+#run-badge.partial{border-color:var(--yellow);color:var(--yellow)}
+#run-badge.none{border-color:var(--red);color:var(--red)}
+
+/* ── Pages ── */
+.page{display:none;flex:1;overflow-y:auto;padding:24px}
+.page.active{display:block}
+.page-inner{max-width:960px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+
+/* ── Cards ── */
+.card{background:var(--surf);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.card-head{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px}
+.card-head h2{font-size:14px;font-weight:600}
+.card-head p{font-size:12px;color:var(--muted);margin-top:2px}
+.card-icon{font-size:18px;line-height:1}
+
+/* ── System bar ── */
+.sys-bar{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+.sys-item{background:var(--surf);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px}
+.sys-label{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.sys-value{font-size:15px;font-weight:600;font-variant-numeric:tabular-nums}
+.sys-value.mono{font-family:monospace;font-size:13px}
+.disk-bar-wrap{margin-top:8px;background:var(--surf2);border-radius:3px;height:5px;overflow:hidden}
+.disk-bar-fill{height:100%;border-radius:3px;background:var(--primary);transition:width .4s}
+.disk-bar-fill.warn{background:var(--yellow)}
+.disk-bar-fill.hot{background:var(--red)}
+.disk-sub{font-size:11px;color:var(--muted);margin-top:4px}
+
+/* ── Container grid ── */
+.c-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+.c-card{background:var(--surf);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;border-left:3px solid var(--border);transition:border-color .2s}
+.c-card.running{border-left-color:var(--green)}
+.c-card.stopped{border-left-color:var(--red)}
+.c-card.other{border-left-color:var(--yellow)}
+.cc-top{padding:12px 14px;display:flex;align-items:flex-start;gap:10px;border-bottom:1px solid var(--border)}
+.dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:5px}
+.dot.green{background:var(--green)}
+.dot.red{background:var(--red)}
+.dot.yellow{background:var(--yellow)}
+.cc-name{font-size:13px;font-weight:600;line-height:1.3}
+.cc-desc{font-size:11px;color:var(--muted);margin-top:2px}
+.cc-state{margin-left:auto;font-size:11px;font-weight:600;white-space:nowrap;padding-top:1px}
+.cc-state.green{color:var(--green)}
+.cc-state.red{color:var(--red)}
+.cc-state.yellow{color:var(--yellow)}
+.cc-metrics{padding:10px 14px;display:flex;flex-direction:column;gap:7px;border-bottom:1px solid var(--border)}
+.mrow{display:flex;align-items:center;gap:8px}
+.ml{font-size:11px;color:var(--muted);width:28px;flex-shrink:0}
+.mbar{flex:1;background:var(--surf2);border-radius:3px;height:4px;overflow:hidden}
+.mfill{height:100%;border-radius:3px;background:var(--blue);transition:width .6s}
+.mfill.warn{background:var(--yellow)}
+.mfill.hot{background:var(--red)}
+.mv{font-size:11px;color:var(--muted);width:70px;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.cc-foot{padding:10px 14px;display:flex;gap:8px;align-items:center}
+.btn-open{background:var(--surf2);border:1px solid var(--border);border-radius:6px;padding:5px 12px;font-size:12px;font-weight:600;color:var(--text);text-decoration:none;cursor:pointer;transition:border-color .15s}
+.btn-open:hover{border-color:var(--primary)}
+.btn-rst{background:none;border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:12px;color:var(--muted);cursor:pointer;margin-left:auto;font-family:var(--font);transition:color .15s,border-color .15s}
+.btn-rst:hover{color:var(--text);border-color:var(--text)}
+.cc-offline{padding:12px 14px;font-size:12px;color:var(--muted)}
+
+/* ── Action row ── */
+.act-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.act-row .spacer{flex:1}
+
+/* ── Log panel ── */
+.log-panel{background:var(--surf);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;display:none}
+.log-panel.open{display:block}
+.log-head{padding:10px 16px;background:var(--surf2);border-bottom:1px solid var(--border);font-size:12px;font-weight:600;color:var(--muted)}
+#log-out{background:#000d1a;color:#c8d3de;font-family:'Consolas','Cascadia Code','Monaco',monospace;font-size:12px;line-height:1.6;padding:14px 16px;height:240px;overflow-y:auto;white-space:pre-wrap;word-break:break-all}
+#log-foot{padding:10px 16px;font-size:13px;border-top:1px solid var(--border)}
+
+/* ── Services quick-links ── */
+.svc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;padding:14px 16px}
+.svc-link{background:var(--surf2);border:1px solid var(--border);border-radius:7px;padding:10px 12px;text-decoration:none;color:var(--text);font-size:13px;font-weight:600;display:flex;flex-direction:column;gap:3px;transition:border-color .15s}
+.svc-link:hover{border-color:var(--primary)}
+.svc-link span{font-size:11px;font-weight:400;color:var(--muted)}
+
+/* ── Buttons ── */
+button,a.btn{border:none;border-radius:7px;padding:8px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font);transition:background .15s,opacity .15s;text-decoration:none;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+button:disabled{opacity:.4;cursor:not-allowed}
+.btn-primary{background:var(--primary);color:#0f172a}
+.btn-primary:hover:not(:disabled){background:var(--primary-h)}
+.btn-ghost{background:var(--surf2);color:var(--text);border:1px solid var(--border)}
+.btn-ghost:hover:not(:disabled){background:var(--border)}
+.btn-danger{background:#7f1d1d;color:#fca5a5;border:1px solid #991b1b}
+.btn-danger:hover:not(:disabled){background:#991b1b}
+
+/* ── Settings form ── */
+.settings-grid{padding:20px;display:grid;grid-template-columns:1fr 1fr;gap:18px 24px}
+@media(max-width:580px){.settings-grid,.c-grid{grid-template-columns:1fr}}
+.field{display:flex;flex-direction:column;gap:6px}
+.field.full{grid-column:1/-1}
+.field label{font-size:12px;font-weight:600;display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.hint{font-weight:400;color:var(--muted);font-size:11px}
+.warn-hint{font-weight:400;color:var(--yellow);font-size:11px}
+a.ext{color:var(--primary);text-decoration:none;font-size:11px;font-weight:500}
+a.ext:hover{text-decoration:underline}
+.field input,.field select,.field textarea{background:var(--surf2);border:1px solid var(--border);border-radius:6px;padding:8px 11px;color:var(--text);font-size:13px;font-family:var(--font);width:100%;transition:border-color .15s}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 2px rgba(229,160,13,.12)}
+.field input::placeholder{color:var(--muted)}
+.field-note{font-size:11px;color:var(--muted)}
+.field-note code{background:var(--surf2);border:1px solid var(--border);border-radius:3px;padding:0 4px;font-size:11px}
+.settings-foot{padding:14px 20px;border-top:1px solid var(--border);display:flex;align-items:center;gap:12px}
+#save-status{font-size:13px;color:var(--muted)}
+#save-status.ok{color:var(--green)}
+#save-status.err{color:var(--red)}
+
+/* ── GPU selector ── */
+.gpu-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.gpu-opt{border:2px solid var(--border);border-radius:8px;padding:14px;cursor:pointer;text-align:center;transition:border-color .15s,background .15s;user-select:none}
+.gpu-opt:hover{border-color:var(--muted)}
+.gpu-opt.sel{border-color:var(--primary);background:rgba(229,160,13,.08)}
+.gpu-opt .gi{font-size:24px;display:block;margin-bottom:6px}
+.gpu-opt strong{font-size:13px;display:block;margin-bottom:3px}
+.gpu-opt span{font-size:11px;color:var(--muted)}
+.gpu-note{background:rgba(229,160,13,.08);border:1px solid rgba(229,160,13,.3);border-radius:7px;padding:12px 14px;font-size:12px;line-height:1.6;display:none}
+.gpu-note.show{display:block}
+
+/* ── Toggle buttons ── */
+.tog-row{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 0;border-bottom:1px solid var(--border);margin-bottom:18px}
+.tog-row label{font-size:13px;font-weight:600}
+.tog-row .tog-sub{font-size:11px;color:var(--muted);margin-top:2px}
+.tog-grp{display:flex;gap:0;border:1px solid var(--border);border-radius:7px;overflow:hidden;flex-shrink:0}
+.tog-btn{background:var(--surf2);border:none;color:var(--muted);padding:7px 16px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font);transition:background .15s,color .15s}
+.tog-btn.active{background:var(--primary);color:#0f172a}
+.tog-btn:first-child{border-right:1px solid var(--border)}
+
+/* ── Wizard ── */
+.wizard-wrap{max-width:640px;margin:0 auto}
+.wiz-progress{display:flex;align-items:center;gap:0;margin-bottom:28px;padding:0 4px}
+.wiz-dot{width:28px;height:28px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--muted);flex-shrink:0;transition:all .2s;background:var(--surf)}
+.wiz-dot.done{background:var(--primary);border-color:var(--primary);color:#000}
+.wiz-dot.active{border-color:var(--primary);color:var(--primary)}
+.wiz-line{flex:1;height:2px;background:var(--border)}
+.wiz-line.done{background:var(--primary)}
+.wiz-step{display:none}
+.wiz-step.active{display:block}
+.wiz-step h2{font-size:20px;font-weight:700;margin-bottom:6px}
+.wiz-step > p{font-size:13px;color:var(--muted);margin-bottom:22px;line-height:1.6}
+.wiz-nav{display:flex;gap:10px;margin-top:24px;align-items:center}
+.wiz-nav .spacer{flex:1}
+.wiz-step-label{font-size:12px;color:var(--muted)}
+.sect-title{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin:20px 0 12px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.info-box{background:var(--surf2);border:1px solid var(--border);border-radius:7px;padding:12px 14px;font-size:13px;line-height:1.7;margin-bottom:16px}
+.info-box strong{color:var(--primary)}
+.cmd-box{position:relative;background:#000d1a;border:1px solid var(--border);border-radius:7px;padding:12px 14px;font-family:monospace;font-size:12px;color:#c8d3de;white-space:pre-wrap;word-break:break-all;margin-top:6px}
+.cmd-copy{position:absolute;top:8px;right:8px;background:var(--surf2);border:1px solid var(--border);border-radius:5px;padding:3px 10px;font-size:11px;color:var(--muted);cursor:pointer;font-family:var(--font)}
+.cmd-copy:hover{color:var(--text)}
+.claim-timer{font-size:12px;padding:4px 10px;border-radius:5px;background:var(--surf2);border:1px solid var(--border);font-weight:600;font-variant-numeric:tabular-nums}
+.claim-timer.expired{color:var(--red);border-color:var(--red)}
+.welcome-ips{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px}
+.ip-card{background:var(--surf2);border:1px solid var(--border);border-radius:8px;padding:14px 16px}
+.ip-label{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.ip-val{font-size:16px;font-weight:700;font-family:monospace}
+.step-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px 20px}
+@media(max-width:520px){.step-form-grid,.gpu-grid,.welcome-ips{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<!-- ── Navigation ── -->
+<nav>
+  <div class="nav-brand"><em>Plex Stack</em> Control Panel</div>
+  <div class="nav-tabs">
+    <button class="tab active" id="tab-dashboard" onclick="nav('dashboard')">Dashboard</button>
+    <button class="tab" id="tab-settings"  onclick="nav('settings')">Settings</button>
+    <button class="tab" id="tab-wizard"    onclick="nav('wizard')">Setup Wizard</button>
+  </div>
+  <div id="run-badge">Connecting…</div>
+</nav>
+
+<!-- ════════════════════════════════════════════════════════════
+     DASHBOARD
+═══════════════════════════════════════════════════════════════ -->
+<div class="page active" id="pg-dashboard">
+<div class="page-inner">
+
+  <!-- System info bar -->
+  <div class="sys-bar">
+    <div class="sys-item">
+      <div class="sys-label">Local IP <span id="sys-local-hint" style="font-weight:400;color:var(--yellow);display:none" title="Set SERVER_IP in Settings for your real LAN IP">⚠ set SERVER_IP</span></div>
+      <div class="sys-value mono" id="sys-local">—</div>
+    </div>
+    <div class="sys-item">
+      <div class="sys-label">WAN IP</div>
+      <div class="sys-value mono" id="sys-wan">—</div>
+    </div>
+    <div class="sys-item">
+      <div class="sys-label">Media Disk</div>
+      <div class="sys-value" id="sys-media-val">—</div>
+      <div class="disk-bar-wrap"><div class="disk-bar-fill" id="sys-media-bar" style="width:0%"></div></div>
+      <div class="disk-sub" id="sys-media-sub"></div>
+    </div>
+    <div class="sys-item">
+      <div class="sys-label">Config Disk</div>
+      <div class="sys-value" id="sys-config-val">—</div>
+      <div class="disk-bar-wrap"><div class="disk-bar-fill" id="sys-config-bar" style="width:0%"></div></div>
+      <div class="disk-sub" id="sys-config-sub"></div>
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <div class="act-row">
+    <button class="btn-primary" onclick="runCompose('update')">⬆ Update All</button>
+    <button class="btn-ghost"   onclick="runCompose('deploy')">↺ Restart Stack</button>
+    <div class="spacer"></div>
+    <a href="/api/download/start.bat" class="btn-ghost">⬇ Download start.bat</a>
+    <a href="/api/download/start.sh"  class="btn-ghost">⬇ start.sh</a>
+  </div>
+
+  <!-- Container grid -->
+  <div class="c-grid" id="c-grid">
+    <div style="color:var(--muted);font-size:13px;grid-column:1/-1">Connecting to Docker…</div>
+  </div>
+
+  <!-- Operation log -->
+  <div class="log-panel" id="log-panel">
+    <div class="log-head">Output</div>
+    <div id="log-out"></div>
+    <div id="log-foot"></div>
+    <div id="svc-links" style="display:none">
+      <div class="svc-grid">
+        <a class="svc-link" href="http://localhost:32400/web" target="_blank">Plex<span>:32400</span></a>
+        <a class="svc-link" href="http://localhost:7878"      target="_blank">Radarr<span>:7878</span></a>
+        <a class="svc-link" href="http://localhost:8989"      target="_blank">Sonarr<span>:8989</span></a>
+        <a class="svc-link" href="http://localhost:9696"      target="_blank">Prowlarr<span>:9696</span></a>
+        <a class="svc-link" href="http://localhost:5055"      target="_blank">Seerr<span>:5055</span></a>
+        <a class="svc-link" href="http://localhost:8080"      target="_blank">qBittorrent<span>:8080</span></a>
+        <a class="svc-link" href="http://localhost:8181"      target="_blank">Tautulli<span>:8181</span></a>
+        <a class="svc-link" href="http://localhost:7474"      target="_blank">Autobrr<span>:7474</span></a>
+        <a class="svc-link" href="http://localhost:5690"      target="_blank">Wizarr<span>:5690</span></a>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════
+     SETTINGS
+═══════════════════════════════════════════════════════════════ -->
+<div class="page" id="pg-settings">
+<div class="page-inner">
+
+  <div class="card">
+    <div class="card-head"><span class="card-icon">⚙️</span><div><h2>System</h2><p>User IDs and timezone</p></div></div>
+    <div class="settings-grid">
+      <div class="field"><label>PUID <span class="hint">User ID — use 1000 on Windows</span></label><input id="s-PUID" type="number" value="1000"></div>
+      <div class="field"><label>PGID <span class="hint">Group ID — use 1000 on Windows</span></label><input id="s-PGID" type="number" value="1000"></div>
+      <div class="field full"><label>Timezone</label><input id="s-TZ" type="text" placeholder="America/Edmonton"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><span class="card-icon">🎮</span><div><h2>Hardware Transcoding</h2><p>GPU acceleration for Plex</p></div></div>
+    <div class="settings-grid">
+      <div class="field full">
+        <label>GPU Provider</label>
+        <select id="s-GPU_PROVIDER">
+          <option value="none">None — software (CPU) transcoding</option>
+          <option value="nvidia">NVIDIA — NVENC / NVDEC hardware transcoding</option>
+        </select>
+        <div class="field-note">NVIDIA: requires up-to-date NVIDIA drivers + Docker Desktop WSL2 backend. Use <code>docker-compose.nvidia.yml</code> override.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><span class="card-icon">📁</span><div><h2>Paths</h2><p>Where configs and media are stored</p></div></div>
+    <div class="settings-grid">
+      <div class="field full"><label>Config Storage Path</label><input id="s-BASE_PATH" type="text" placeholder="C:/Users/username/AppData/Local/PlexStack"></div>
+      <div class="field full">
+        <label>Media Root Path</label>
+        <input id="s-MEDIA_SHARE" type="text" placeholder="C:/Users/username/Videos">
+        <div class="field-note">Must contain: <code>media/movies</code> <code>media/tv</code> <code>downloads/movies</code> <code>downloads/tv</code></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><span class="card-icon">▶️</span><div><h2>Plex</h2></div></div>
+    <div class="settings-grid">
+      <div class="field full">
+        <label>Plex Claim Token <a class="ext" href="https://www.plex.tv/claim" target="_blank">Get token ↗</a> <span class="warn-hint">⚠ Expires in 4 min — grab right before deploy</span></label>
+        <input id="s-PLEX_CLAIM" type="text" placeholder="claim-xxxxxxxxxxxxxxxxxxxx">
+      </div>
+      <div class="field"><label>Plex URL <span class="hint">Fill in after first run</span></label><input id="s-PLEX_URL" type="text" placeholder="http://192.168.1.100:32400"></div>
+      <div class="field"><label>Plex Token <span class="hint">Fill in after first run</span></label><input id="s-PLEX_TOKEN" type="text"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><span class="card-icon">🔒</span><div><h2>VPN — qBittorrent</h2></div></div>
+    <div class="settings-grid">
+      <div class="field full">
+        <input type="hidden" id="s-VPN_ENABLED" value="yes">
+        <div class="tog-row" style="border:none;padding:0;margin:0">
+          <div><div>Enable VPN</div><div class="tog-sub">Disable for LAN-only use</div></div>
+          <div class="tog-grp">
+            <button class="tog-btn active" id="svpn-yes" onclick="setVpnEnabledSettings(true)">Enabled</button>
+            <button class="tog-btn" id="svpn-no" onclick="setVpnEnabledSettings(false)">Disabled</button>
+          </div>
+        </div>
+      </div>
+      <div class="field"><label>VPN Username</label><input id="s-VPN_USER" type="text" placeholder="p1234567"></div>
+      <div class="field"><label>VPN Password</label><input id="s-VPN_PASS" type="password"></div>
+      <div class="field">
+        <label>VPN Provider</label>
+        <select id="s-VPN_PROV">
+          <option value="pia">Private Internet Access (PIA)</option>
+          <option value="mullvad">Mullvad</option>
+          <option value="protonvpn">ProtonVPN</option>
+          <option value="nordvpn">NordVPN</option>
+          <option value="custom">Custom / Other</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>VPN Protocol</label>
+        <select id="s-VPN_CLIENT">
+          <option value="wireguard">WireGuard (recommended)</option>
+          <option value="openvpn">OpenVPN</option>
+        </select>
+      </div>
+      <div class="field full"><label>LAN Network <span class="hint">Your local subnet</span></label><input id="s-LAN_NETWORK" type="text" placeholder="192.168.1.0/24"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><span class="card-icon">🌐</span><div><h2>Network &amp; API Keys</h2><p>Fill in after services are running</p></div></div>
+    <div class="settings-grid">
+      <div class="field full"><label>Server IP</label><input id="s-SERVER_IP" type="text" placeholder="192.168.1.100"></div>
+      <div class="field"><label>Sonarr API Key <span class="hint">Sonarr → Settings → General</span></label><input id="s-SONARR_KEY" type="text"></div>
+      <div class="field"><label>Radarr API Key <span class="hint">Radarr → Settings → General</span></label><input id="s-RADARR_KEY" type="text"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="settings-foot">
+      <button class="btn-primary" onclick="saveSettings()">Save Settings</button>
+      <button class="btn-ghost"   onclick="saveAndDeploy()">Save &amp; Restart Stack</button>
+      <span id="save-status"></span>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════
+     SETUP WIZARD
+═══════════════════════════════════════════════════════════════ -->
+<div class="page" id="pg-wizard">
+<div class="page-inner">
+<div class="wizard-wrap">
+
+  <!-- Progress dots -->
+  <div class="wiz-progress" id="wiz-progress"></div>
+
+  <!-- Step 0: Welcome -->
+  <div class="wiz-step active" id="wz-0">
+    <h2>Welcome to Ultimate Plex Stack</h2>
+    <p>This wizard walks you through the one-time setup. It takes about 5 minutes.<br>Your answers are saved as you go — you can close and come back anytime.</p>
+    <div class="welcome-ips">
+      <div class="ip-card"><div class="ip-label">Local IP</div><div class="ip-val" id="w-local-ip">Detecting…</div></div>
+      <div class="ip-card"><div class="ip-label">WAN IP</div><div class="ip-val" id="w-wan-ip">Detecting…</div></div>
+    </div>
+    <div class="info-box">
+      <strong>What you're setting up:</strong> Plex media server · Radarr &amp; Sonarr (auto-download) · Prowlarr (indexers) · qBittorrent with VPN · Tautulli · Autobrr · Wizarr · Prefetcharr
+    </div>
+    <p style="font-size:13px;color:var(--muted)">Download the launch script — double-click it anytime to start your stack and open this control panel.</p>
+    <div style="display:flex;gap:10px;margin-top:12px">
+      <a href="/api/download/start.bat" class="btn-ghost">⬇ Download start.bat <span style="font-size:11px;opacity:.7">(Windows)</span></a>
+      <a href="/api/download/start.sh"  class="btn-ghost">⬇ Download start.sh <span style="font-size:11px;opacity:.7">(Linux/Mac)</span></a>
+    </div>
+  </div>
+
+  <!-- Step 1: System + GPU -->
+  <div class="wiz-step" id="wz-1">
+    <h2>System Settings</h2>
+    <p>User permissions, timezone, and GPU transcoding support.</p>
+    <div class="step-form-grid">
+      <div class="field"><label>PUID <span class="hint">User ID — use 1000 on Windows</span></label><input id="w-PUID" type="number" value="1000"></div>
+      <div class="field"><label>PGID <span class="hint">Group ID — use 1000 on Windows</span></label><input id="w-PGID" type="number" value="1000"></div>
+      <div class="field full"><label>Timezone <span class="hint">e.g. America/Edmonton · America/New_York · Europe/London</span></label><input id="w-TZ" type="text" placeholder="America/Edmonton"></div>
+    </div>
+    <div class="sect-title">Hardware Transcoding</div>
+    <div class="gpu-grid">
+      <div class="gpu-opt sel" id="gpu-none"   onclick="selectGpu('none')">
+        <span class="gi">💻</span><strong>None</strong><span>CPU / software</span>
+      </div>
+      <div class="gpu-opt" id="gpu-nvidia" onclick="selectGpu('nvidia')">
+        <span class="gi">🎮</span><strong>NVIDIA</strong><span>NVENC / NVDEC</span>
+      </div>
+    </div>
+    <div class="gpu-note" id="gpu-nvidia-note" style="margin-top:12px">
+      <strong>NVIDIA on Windows Docker Desktop:</strong> No extra setup needed — just make sure your NVIDIA drivers are up to date. Docker Desktop uses your GPU automatically via WSL2.<br><br>
+      <strong>NVIDIA on Linux:</strong> Install <code>nvidia-container-toolkit</code> first. See NVIDIA's docs for your distro.
+    </div>
+  </div>
+
+  <!-- Step 2: Paths -->
+  <div class="wiz-step" id="wz-2">
+    <h2>Folder Paths</h2>
+    <p>Where your container settings and media files live. These paths are auto-filled for your OS — adjust if needed.</p>
+    <div class="field" style="margin-bottom:16px">
+      <label>Config Storage Path <span class="hint">Container databases &amp; settings — not media files</span></label>
+      <input id="w-BASE_PATH" type="text">
+    </div>
+    <div class="field">
+      <label>Media Root Path <span class="hint">Your Videos / data folder</span></label>
+      <input id="w-MEDIA_SHARE" type="text" oninput="updateFolderCmd()">
+    </div>
+    <div class="sect-title">Create Required Subfolders</div>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:8px">Run this once in PowerShell to create the folder structure Radarr and Sonarr expect:</p>
+    <div class="cmd-box" id="folder-cmd"><button class="cmd-copy" onclick="copyCmd()">Copy</button></div>
+  </div>
+
+  <!-- Step 3: VPN -->
+  <div class="wiz-step" id="wz-3">
+    <h2>VPN — qBittorrent</h2>
+    <p>Route download traffic through a VPN for privacy, or run without one if you're downloading on a private home network.</p>
+
+    <input type="hidden" id="w-VPN_ENABLED" value="yes">
+    <div class="tog-row">
+      <div>
+        <div>Enable VPN for qBittorrent</div>
+        <div class="tog-sub">Disable if you're on a private network and don't need VPN protection</div>
+      </div>
+      <div class="tog-grp">
+        <button class="tog-btn active" id="vpn-yes" onclick="setVpnEnabled(true)">Enabled</button>
+        <button class="tog-btn" id="vpn-no" onclick="setVpnEnabled(false)">Disabled</button>
+      </div>
+    </div>
+
+    <div id="vpn-creds">
+      <div class="step-form-grid">
+        <div class="field"><label>VPN Username</label><input id="w-VPN_USER" type="text" placeholder="p1234567"></div>
+        <div class="field"><label>VPN Password</label><input id="w-VPN_PASS" type="password" placeholder="••••••••"></div>
+        <div class="field">
+          <label>VPN Provider</label>
+          <select id="w-VPN_PROV">
+            <option value="pia">Private Internet Access (PIA)</option>
+            <option value="mullvad">Mullvad</option>
+            <option value="protonvpn">ProtonVPN</option>
+            <option value="nordvpn">NordVPN</option>
+            <option value="custom">Custom / Other</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>VPN Protocol</label>
+          <select id="w-VPN_CLIENT">
+            <option value="wireguard">WireGuard (recommended)</option>
+            <option value="openvpn">OpenVPN</option>
+          </select>
+        </div>
+        <div class="field full"><label>LAN Network <span class="hint">Your home subnet — lets LAN devices reach the qBittorrent WebUI</span></label><input id="w-LAN_NETWORK" type="text" placeholder="192.168.1.0/24"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 4: Services & API Keys -->
+  <div class="wiz-step" id="wz-4">
+    <h2>Services &amp; API Keys</h2>
+    <p>These can be filled in now <strong>or after your first deploy</strong> — services need to be running before you can grab their keys. Click the links below to open each service once deployed.</p>
+
+    <div class="info-box" style="margin-bottom:18px">
+      💡 <strong>First time?</strong> Skip this step, click Deploy on the next screen, then come back here via <strong>Settings</strong> once everything is running.
+    </div>
+
+    <div class="sect-title">Server</div>
+    <div class="step-form-grid" style="margin-bottom:18px">
+      <div class="field full">
+        <label>Your Server's Local IP <span class="hint">Shown on the dashboard — other devices use this to reach Plex</span></label>
+        <input id="w-SERVER_IP" type="text" placeholder="192.168.1.100">
+      </div>
+    </div>
+
+    <div class="sect-title">
+      Plex
+      <a class="ext" href="http://localhost:32400/web" target="_blank" style="margin-left:10px">Open Plex ↗</a>
+    </div>
+    <div class="step-form-grid" style="margin-bottom:4px">
+      <div class="field">
+        <label>Plex URL</label>
+        <input id="w-PLEX_URL" type="text" placeholder="http://192.168.1.100:32400">
+      </div>
+      <div class="field">
+        <label>
+          Plex Token
+          <a class="ext" href="https://support.plex.tv/articles/204059436" target="_blank">How to find it ↗</a>
+        </label>
+        <input id="w-PLEX_TOKEN" type="text" placeholder="xxxxxxxxxxxxxxxxxxxx">
+      </div>
+    </div>
+    <div class="field-note" style="margin-bottom:18px">In Plex: Sign in → click your avatar → Account → scroll to bottom of XML page → find <code>X-Plex-Token</code></div>
+
+    <div class="sect-title">
+      Sonarr — TV Automation
+      <a class="ext" href="http://localhost:8989" target="_blank" style="margin-left:10px">Open Sonarr ↗</a>
+    </div>
+    <div class="step-form-grid" style="margin-bottom:18px">
+      <div class="field full">
+        <label>Sonarr API Key</label>
+        <input id="w-SONARR_KEY" type="text" placeholder="paste key here">
+        <div class="field-note">Sonarr → Settings → General → copy the API Key at the top</div>
+      </div>
+    </div>
+
+    <div class="sect-title">
+      Radarr — Movie Automation
+      <a class="ext" href="http://localhost:7878" target="_blank" style="margin-left:10px">Open Radarr ↗</a>
+    </div>
+    <div class="step-form-grid" style="margin-bottom:18px">
+      <div class="field full">
+        <label>Radarr API Key</label>
+        <input id="w-RADARR_KEY" type="text" placeholder="paste key here">
+        <div class="field-note">Radarr → Settings → General → copy the API Key at the top</div>
+      </div>
+    </div>
+
+    <div class="sect-title">Prefetcharr — Auto-Download Next Episodes</div>
+    <div class="info-box">
+      🤖 Prefetcharr uses your <strong>Plex Token</strong> and <strong>Sonarr API Key</strong> above — no separate setup needed. The config file is written automatically when you click Next. After deploy, restart the Prefetcharr container from the dashboard if you filled in the keys.
+    </div>
+  </div>
+
+  <!-- Step 5: Plex Claim Token (LAST before deploy — expires in 4 min) -->
+  <div class="wiz-step" id="wz-5">
+    <h2>Plex Claim Token</h2>
+    <p>This token links your Plex server to your account on first launch. <strong>It expires 4 minutes after you generate it</strong> — get it right before clicking Deploy.</p>
+
+    <div style="background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.4);border-radius:8px;padding:16px 18px;margin-bottom:20px">
+      <div style="font-size:13px;font-weight:600;color:var(--yellow);margin-bottom:10px">⚠ Time-sensitive — do this step last</div>
+      <ol style="font-size:13px;color:var(--text);line-height:2;padding-left:18px">
+        <li>Click <a class="ext" href="https://www.plex.tv/claim" target="_blank" style="font-size:13px">plex.tv/claim ↗</a> — sign in if needed</li>
+        <li>Copy the token shown on that page</li>
+        <li>Paste it below, then immediately click <strong>Deploy</strong></li>
+      </ol>
+    </div>
+
+    <div class="field">
+      <label>
+        Plex Claim Token
+        <a class="ext" href="https://www.plex.tv/claim" target="_blank">Get token ↗</a>
+        <span id="claim-timer" class="claim-timer">4:00</span>
+      </label>
+      <input id="w-PLEX_CLAIM" type="text" placeholder="claim-xxxxxxxxxxxxxxxxxxxx" oninput="onClaimInput()" style="font-family:monospace;font-size:13px">
+    </div>
+    <div class="field-note" style="margin-top:8px">If the timer hits 0:00 before you deploy, just go back to plex.tv/claim and get a fresh token — takes 5 seconds.</div>
+  </div>
+
+  <!-- Step 6: Deploy -->
+  <div class="wiz-step" id="wz-6">
+    <h2>Ready to Launch!</h2>
+    <p>Everything is configured. Click <strong>Deploy</strong> to pull and start all containers. First launch takes a few minutes while images download.</p>
+    <div class="info-box" id="deploy-summary"></div>
+    <div class="log-panel" id="wiz-log-panel" style="margin-top:16px">
+      <div class="log-head">Deploy Output</div>
+      <div id="wiz-log-out"></div>
+      <div id="wiz-log-foot"></div>
+      <div id="wiz-svc-links" style="display:none">
+        <div class="svc-grid">
+          <a class="svc-link" href="http://localhost:32400/web" target="_blank">Plex<span>:32400</span></a>
+          <a class="svc-link" href="http://localhost:7878"      target="_blank">Radarr<span>:7878</span></a>
+          <a class="svc-link" href="http://localhost:8989"      target="_blank">Sonarr<span>:8989</span></a>
+          <a class="svc-link" href="http://localhost:9696"      target="_blank">Prowlarr<span>:9696</span></a>
+          <a class="svc-link" href="http://localhost:5055"      target="_blank">Seerr<span>:5055</span></a>
+          <a class="svc-link" href="http://localhost:8080"      target="_blank">qBittorrent<span>:8080</span></a>
+          <a class="svc-link" href="http://localhost:8181"      target="_blank">Tautulli<span>:8181</span></a>
+          <a class="svc-link" href="http://localhost:7474"      target="_blank">Autobrr<span>:7474</span></a>
+          <a class="svc-link" href="http://localhost:5690"      target="_blank">Wizarr<span>:5690</span></a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Wizard nav -->
+  <div class="wiz-nav" id="wiz-nav">
+    <button class="btn-ghost"   id="wiz-back"   onclick="wizStep(-1)">← Back</button>
+    <span class="wiz-step-label" id="wiz-label">Step 1 of 6</span>
+    <div class="spacer"></div>
+    <button class="btn-primary" id="wiz-next"   onclick="wizStep(1)">Next →</button>
+    <button class="btn-primary" id="wiz-deploy" onclick="wizDeploy()" style="display:none">🚀 Deploy</button>
+  </div>
+
+</div>
+</div>
+</div>
+
+<!-- ── Script ──────────────────────────────────────────────────────────────── -->
+<script>
+// ── Constants ────────────────────────────────────────────────────────────────
+const URLS = {
+  plex:'http://localhost:32400/web', radarr:'http://localhost:7878',
+  sonarr:'http://localhost:8989',   prowlarr:'http://localhost:9696',
+  seerr:'http://localhost:5055',    'qbit-vpn':'http://localhost:8080',
+  tautulli:'http://localhost:8181', autobrr:'http://localhost:7474',
+  wizarr:'http://localhost:5690',
+};
+const NAMES = {
+  plex:'Plex', radarr:'Radarr', sonarr:'Sonarr', prowlarr:'Prowlarr',
+  seerr:'Seerr / Overseerr', 'qbit-vpn':'qBittorrent + VPN',
+  tautulli:'Tautulli', autobrr:'Autobrr', wizarr:'Wizarr', prefetcharr:'Prefetcharr',
+};
+const DESCS = {
+  plex:'Media server', radarr:'Movie automation', sonarr:'TV automation',
+  prowlarr:'Indexer manager', seerr:'Request portal', 'qbit-vpn':'Download client',
+  tautulli:'Plex analytics', autobrr:'Torrent grabber', wizarr:'Invite manager',
+  prefetcharr:'Next-ep fetcher',
+};
+const WFIELDS = ['PUID','PGID','TZ','BASE_PATH','MEDIA_SHARE','PLEX_CLAIM','PLEX_URL','PLEX_TOKEN','VPN_ENABLED','VPN_USER','VPN_PASS','VPN_PROV','VPN_CLIENT','LAN_NETWORK','SERVER_IP','SONARR_KEY','RADARR_KEY'];
+const SFIELDS = WFIELDS.map(k => 's-' + k).concat(['s-GPU_PROVIDER']);
+const TOTAL_STEPS = 7;
+
+// ── State ────────────────────────────────────────────────────────────────────
+let wizCurrentStep = 0;
+let gpuProvider    = 'none';
+let claimInterval  = null;
+let claimSeconds   = 0;
+let statusES       = null;
+
+// ── Utils ────────────────────────────────────────────────────────────────────
+function fmtBytes(b) {
+  if (!b) return '—';
+  const u = ['B','KB','MB','GB','TB']; let i = 0, v = b;
+  while (v >= 1024 && i < 4) { v /= 1024; i++; }
+  return `${v.toFixed(i > 0 ? 1 : 0)} ${u[i]}`;
+}
+function fmtDisk(d) {
+  if (!d) return { val:'—', sub:'', pct:0 };
+  const pct  = (d.used / d.total * 100);
+  const free = fmtBytes(d.free);
+  const tot  = fmtBytes(d.total);
+  return { val: `${pct.toFixed(0)}% used`, sub: `${fmtBytes(d.used)} / ${tot} — ${free} free`, pct };
+}
+
+// ── Navigation ───────────────────────────────────────────────────────────────
+function nav(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('pg-' + page).classList.add('active');
+  document.getElementById('tab-' + page).classList.add('active');
+  if (page === 'wizard' && wizCurrentStep === 0) loadWizardIps();
+  if (page !== 'wizard') stopClaimTimer();
+}
+
+// ── System info ──────────────────────────────────────────────────────────────
+async function loadSystem(preloaded) {
+  try {
+    const d = preloaded || await fetch('/api/system').then(r => r.json());
+    document.getElementById('sys-local').textContent = d.localIp || '—';
+    document.getElementById('sys-local-hint').style.display = d.localIpIsSet ? 'none' : '';
+    document.getElementById('sys-wan').textContent   = d.wanIp   || '—';
+    updateDisk('sys-media', d.mediaDisk);
+    updateDisk('sys-config', d.configDisk);
+  } catch {}
+}
+function updateDisk(prefix, d) {
+  const { val, sub, pct } = fmtDisk(d);
+  document.getElementById(prefix + '-val').textContent = val;
+  document.getElementById(prefix + '-sub').textContent = sub;
+  const bar = document.getElementById(prefix + '-bar');
+  bar.style.width = pct + '%';
+  bar.className   = 'disk-bar-fill' + (pct > 90 ? ' hot' : pct > 70 ? ' warn' : '');
+}
+async function loadWizardIps() {
+  try {
+    const d = await fetch('/api/system').then(r => r.json());
+    document.getElementById('w-local-ip').textContent = d.localIp || '—';
+    document.getElementById('w-wan-ip').textContent   = d.wanIp   || '—';
+  } catch {}
+}
+
+// ── Status SSE ───────────────────────────────────────────────────────────────
+function startStatusStream() {
+  if (statusES) statusES.close();
+  statusES = new EventSource('/api/stream/status');
+  statusES.addEventListener('status', e => renderGrid(JSON.parse(e.data)));
+  statusES.onerror = () => setTimeout(startStatusStream, 5000);
+}
+
+function renderGrid(containers) {
+  const filtered = containers.filter(c => c.name !== 'plex-control');
+  const running  = filtered.filter(c => c.state === 'running').length;
+  const badge    = document.getElementById('run-badge');
+  badge.textContent = `${running} / ${filtered.length} running`;
+  badge.className   = running === filtered.length ? 'all-good' : running === 0 ? 'none' : 'partial';
+
+  const grid = document.getElementById('c-grid');
+  if (filtered.length === 0) {
+    grid.innerHTML = '<div style="color:var(--muted);font-size:13px;grid-column:1/-1">No containers found — is Docker running?</div>';
+    return;
+  }
+
+  filtered.forEach(c => {
+    let card = document.getElementById('cc-' + c.name);
+    if (!card) { card = document.createElement('div'); card.id = 'cc-' + c.name; grid.appendChild(card); }
+    const dot   = c.state === 'running' ? 'green' : c.state === 'exited' ? 'red' : 'yellow';
+    const label = c.state === 'running' ? 'Running' : c.state === 'exited' ? 'Stopped' : c.state;
+    card.className = 'c-card ' + (c.state === 'running' ? 'running' : c.state === 'exited' ? 'stopped' : 'other');
+    const cpuPct = Math.min(c.cpu || 0, 100);
+    const memPct = Math.min(c.mem_pct || 0, 100);
+    const url    = URLS[c.name];
+    card.innerHTML = `
+      <div class="cc-top">
+        <span class="dot ${dot}"></span>
+        <div><div class="cc-name">${NAMES[c.name] || c.name}</div><div class="cc-desc">${DESCS[c.name] || ''}</div></div>
+        <span class="cc-state ${dot}">${label}</span>
+      </div>
+      <div class="cc-metrics">
+        <div class="mrow"><span class="ml">CPU</span><div class="mbar"><div class="mfill${cpuPct>80?' hot':cpuPct>60?' warn':''}" style="width:${cpuPct}%"></div></div><span class="mv">${c.cpu !== null ? c.cpu.toFixed(1)+'%' : '—'}</span></div>
+        <div class="mrow"><span class="ml">RAM</span><div class="mbar"><div class="mfill${memPct>80?' hot':memPct>60?' warn':''}" style="width:${memPct}%"></div></div><span class="mv">${fmtBytes(c.mem_used)}</span></div>
+      </div>
+      <div class="cc-foot">
+        ${url ? `<a href="${url}" target="_blank" class="btn-open">Open ↗</a>` : '<span></span>'}
+        <button class="btn-rst" onclick="restartOne('${c.name}')">↺ Restart</button>
+      </div>`;
+  });
+}
+
+// ── Container actions ────────────────────────────────────────────────────────
+async function restartOne(name) {
+  if (!confirm(`Restart ${NAMES[name] || name}?`)) return;
+  const r = await fetch(`/api/containers/${name}/restart`, { method: 'POST' });
+  const d = await r.json();
+  if (!d.ok) alert('Restart failed: ' + d.error);
+}
+
+// ── Compose operations ───────────────────────────────────────────────────────
+function runCompose(action) {
+  const panel  = document.getElementById('log-panel');
+  const logEl  = document.getElementById('log-out');
+  const foot   = document.getElementById('log-foot');
+  const svcs   = document.getElementById('svc-links');
+  panel.classList.add('open');
+  logEl.textContent = '';
+  foot.textContent  = '';
+  svcs.style.display = 'none';
+  panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+  const es = new EventSource(`/api/stream/compose?action=${action}`);
+  es.addEventListener('log', e => {
+    logEl.textContent += JSON.parse(e.data).line + '\n';
+    logEl.scrollTop = logEl.scrollHeight;
+  });
+  es.addEventListener('done', e => {
+    es.close();
+    const { code } = JSON.parse(e.data);
+    if (code === 0) { foot.innerHTML = '<span style="color:var(--green)">✓ Done</span>'; svcs.style.display = 'block'; }
+    else              foot.innerHTML = `<span style="color:var(--red)">✗ Failed (exit ${code})</span>`;
+  });
+  es.onerror = () => { es.close(); foot.innerHTML = '<span style="color:var(--red)">Connection lost</span>'; };
+}
+
+// ── Settings ─────────────────────────────────────────────────────────────────
+function getSettingsValues() {
+  const v = {};
+  for (const id of SFIELDS) {
+    const k  = id.replace('s-', '');
+    const el = document.getElementById(id);
+    if (el) v[k] = el.value;
+  }
+  return v;
+}
+function setSettingsValues(cfg) {
+  for (const id of SFIELDS) {
+    const k  = id.replace('s-', '');
+    const el = document.getElementById(id);
+    if (el && cfg[k] !== undefined && cfg[k] !== '') el.value = cfg[k];
+  }
+}
+async function saveSettings() {
+  const r = await fetch('/api/save', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(getSettingsValues()) });
+  const d = await r.json();
+  const st = document.getElementById('save-status');
+  st.textContent = d.ok ? '✓ Saved' : '✗ ' + d.error;
+  st.className   = d.ok ? 'ok' : 'err';
+  return d.ok;
+}
+async function saveAndDeploy() {
+  const ok = await saveSettings();
+  if (ok) runCompose('deploy');
+}
+
+// ── Wizard ───────────────────────────────────────────────────────────────────
+function buildProgress() {
+  const wrap = document.getElementById('wiz-progress');
+  wrap.innerHTML = '';
+  for (let i = 0; i < TOTAL_STEPS; i++) {
+    const dot = document.createElement('div');
+    dot.className = 'wiz-dot' + (i < wizCurrentStep ? ' done' : i === wizCurrentStep ? ' active' : '');
+    dot.textContent = i + 1;
+    wrap.appendChild(dot);
+    if (i < TOTAL_STEPS - 1) {
+      const line = document.createElement('div');
+      line.className = 'wiz-line' + (i < wizCurrentStep ? ' done' : '');
+      wrap.appendChild(line);
+    }
+  }
+}
+
+function showWizStep(n) {
+  document.querySelectorAll('.wiz-step').forEach(s => s.classList.remove('active'));
+  document.getElementById('wz-' + n).classList.add('active');
+  document.getElementById('wiz-label').textContent = `Step ${n + 1} of ${TOTAL_STEPS}`;
+  document.getElementById('wiz-back').style.display   = n === 0 ? 'none' : '';
+  document.getElementById('wiz-next').style.display   = n === TOTAL_STEPS - 1 ? 'none' : '';
+  document.getElementById('wiz-deploy').style.display = n === TOTAL_STEPS - 1 ? '' : 'none';
+  buildProgress();
+  if (n === 5) startClaimTimer(); else stopClaimTimer();
+  if (n === TOTAL_STEPS - 1) buildDeploySummary();
+  if (n === 2) updateFolderCmd();
+}
+
+async function wizStep(dir) {
+  const next = wizCurrentStep + dir;
+  if (next < 0 || next >= TOTAL_STEPS) return;
+  // Save on every forward step
+  if (dir > 0) await saveWizardValues();
+  wizCurrentStep = next;
+  showWizStep(wizCurrentStep);
+}
+
+function getWizardValues() {
+  const v = { GPU_PROVIDER: gpuProvider };
+  for (const k of WFIELDS) {
+    const el = document.getElementById('w-' + k);
+    if (el) v[k] = el.value;
+  }
+  return v;
+}
+function setWizardValues(cfg) {
+  for (const k of WFIELDS) {
+    const el = document.getElementById('w-' + k);
+    if (el && cfg[k] !== undefined && cfg[k] !== '') el.value = cfg[k];
+  }
+  if (cfg.GPU_PROVIDER) selectGpu(cfg.GPU_PROVIDER);
+  if (cfg.VPN_ENABLED)  setVpnEnabled(cfg.VPN_ENABLED !== 'no');
+}
+async function saveWizardValues() {
+  await fetch('/api/save', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(getWizardValues()) });
+}
+
+async function wizDeploy() {
+  await saveWizardValues();
+  const panel = document.getElementById('wiz-log-panel');
+  const logEl = document.getElementById('wiz-log-out');
+  const foot  = document.getElementById('wiz-log-foot');
+  const svcs  = document.getElementById('wiz-svc-links');
+  panel.classList.add('open');
+  logEl.textContent = '';
+  foot.textContent  = '';
+  svcs.style.display = 'none';
+  document.getElementById('wiz-deploy').disabled = true;
+
+  const es = new EventSource('/api/stream/compose?action=deploy');
+  es.addEventListener('log', e => {
+    logEl.textContent += JSON.parse(e.data).line + '\n';
+    logEl.scrollTop = logEl.scrollHeight;
+  });
+  es.addEventListener('done', e => {
+    es.close();
+    document.getElementById('wiz-deploy').disabled = false;
+    const { code } = JSON.parse(e.data);
+    if (code === 0) {
+      foot.innerHTML = '<span style="color:var(--green)">✓ Stack is running!</span>';
+      svcs.style.display = 'block';
+      setTimeout(() => nav('dashboard'), 3000);
+    } else {
+      foot.innerHTML = `<span style="color:var(--red)">✗ Deploy failed (exit ${code}) — check the log above</span>`;
+    }
+  });
+  es.onerror = () => {
+    es.close();
+    // plex-control was recreated mid-deploy — normal. Poll until it's back.
+    foot.innerHTML = '<span style="color:var(--yellow)">⟳ Stack restarting — reconnecting automatically…</span>';
+    wizWaitReconnect(foot, svcs);
+  };
+}
+
+function buildDeploySummary() {
+  const v    = getWizardValues();
+  const gpu  = v.GPU_PROVIDER === 'nvidia' ? '🎮 NVIDIA NVENC/NVDEC' : '💻 CPU (software)';
+  const vpn  = v.VPN_ENABLED === 'no' ? '🚫 Disabled (LAN only)' : `🔒 ${v.VPN_PROV || 'pia'} / ${v.VPN_CLIENT || 'wireguard'}`;
+  const html = `
+    <div style="display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:13px">
+      <span style="color:var(--muted)">Timezone</span>   <strong>${v.TZ || '—'}</strong>
+      <span style="color:var(--muted)">Media path</span> <strong style="font-family:monospace;font-size:12px">${v.MEDIA_SHARE || '—'}</strong>
+      <span style="color:var(--muted)">GPU</span>        <strong>${gpu}</strong>
+      <span style="color:var(--muted)">VPN</span>        <strong>${vpn}</strong>
+    </div>`;
+  document.getElementById('deploy-summary').innerHTML = html;
+}
+
+// ── GPU selector ──────────────────────────────────────────────────────────────
+function selectGpu(val) {
+  gpuProvider = val;
+  document.querySelectorAll('.gpu-opt').forEach(el => el.classList.remove('sel'));
+  document.getElementById('gpu-' + val)?.classList.add('sel');
+  document.getElementById('gpu-nvidia-note').classList.toggle('show', val === 'nvidia');
+}
+
+// ── Paths step ────────────────────────────────────────────────────────────────
+function updateFolderCmd() {
+  const p   = document.getElementById('w-MEDIA_SHARE')?.value || 'C:/Users/username/Videos';
+  const cmd = `$v = "${p}"\nNew-Item -ItemType Directory -Force \`\n  "$v\\media\\movies","$v\\media\\tv",\`\n  "$v\\downloads\\movies","$v\\downloads\\tv"`;
+  const box = document.getElementById('folder-cmd');
+  if (!box) return;
+  // Rebuild cleanly: remove all children, add button then text node
+  while (box.firstChild) box.removeChild(box.firstChild);
+  const btn = document.createElement('button');
+  btn.className   = 'cmd-copy';
+  btn.textContent = 'Copy';
+  btn.onclick     = copyCmd;
+  box.appendChild(btn);
+  box.appendChild(document.createTextNode(cmd));
+}
+function copyCmd() {
+  const box = document.getElementById('folder-cmd');
+  const txt = [...box.childNodes].filter(n => n.nodeType === 3).map(n => n.textContent).join('').trim();
+  navigator.clipboard.writeText(txt).catch(() => {});
+}
+
+// ── Claim timer ───────────────────────────────────────────────────────────────
+function startClaimTimer() {
+  stopClaimTimer();
+  claimSeconds = 240;
+  const el = document.getElementById('claim-timer');
+  const tick = () => {
+    if (claimSeconds <= 0) {
+      el.textContent = '⚠ Expired — get a new token';
+      el.classList.add('expired');
+      return;
+    }
+    const m = Math.floor(claimSeconds / 60), s = claimSeconds % 60;
+    el.textContent = `${m}:${s.toString().padStart(2,'0')}`;
+    el.classList.remove('expired');
+    claimSeconds--;
+  };
+  tick();
+  claimInterval = setInterval(tick, 1000);
+}
+function stopClaimTimer() {
+  if (claimInterval) { clearInterval(claimInterval); claimInterval = null; }
+}
+function onClaimInput() {
+  // Reset timer when user pastes a new token
+  if (document.getElementById('w-PLEX_CLAIM').value.startsWith('claim-')) startClaimTimer();
+}
+
+// ── Wizard reconnect after self-restart ──────────────────────────────────────
+function wizWaitReconnect(foot, svcs) {
+  let attempts = 0;
+  const timer = setInterval(async () => {
+    attempts++;
+    const dots = '.'.repeat((attempts % 3) + 1);
+    foot.innerHTML = `<span style="color:var(--yellow)">⟳ Reconnecting${dots}</span>`;
+    try {
+      const r = await fetch('/api/config', { signal: AbortSignal.timeout(2000) });
+      if (r.ok) {
+        clearInterval(timer);
+        foot.innerHTML = '<span style="color:var(--green)">✓ Stack deployed — loading dashboard…</span>';
+        svcs.style.display = 'block';
+        setTimeout(() => {
+          startStatusStream();
+          loadSystem();
+          nav('dashboard');
+        }, 2000);
+      }
+    } catch { /* still restarting */ }
+    if (attempts > 90) { // 3 min timeout
+      clearInterval(timer);
+      foot.innerHTML = '<span style="color:var(--red)">Could not reconnect after 3 minutes. Open <a href="http://localhost:7979" style="color:var(--primary)">localhost:7979</a> manually.</span>';
+    }
+  }, 2000);
+}
+
+// ── VPN toggle ────────────────────────────────────────────────────────────────
+function setVpnEnabled(on) {
+  document.getElementById('w-VPN_ENABLED').value = on ? 'yes' : 'no';
+  document.getElementById('vpn-yes').classList.toggle('active', on);
+  document.getElementById('vpn-no').classList.toggle('active', !on);
+  document.getElementById('vpn-creds').style.display = on ? '' : 'none';
+}
+function setVpnEnabledSettings(on) {
+  document.getElementById('s-VPN_ENABLED').value = on ? 'yes' : 'no';
+  document.getElementById('svpn-yes').classList.toggle('active', on);
+  document.getElementById('svpn-no').classList.toggle('active', !on);
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+async function init() {
+  // Always start these — needed for nav badge + wizard progress regardless of page
+  showWizStep(0);
+  startStatusStream();
+
+  try {
+    const [platRes, cfgRes, sysRes] = await Promise.all([
+      fetch('/api/platform').then(r => r.json()),
+      fetch('/api/config').then(r => r.json()),
+      fetch('/api/system').then(r => r.json()),
+    ]);
+
+    // Timezone: browser knows the real local timezone — more accurate than server
+    const browserTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+    // Smart defaults — only fill empty fields
+    if (!cfgRes.BASE_PATH)    cfgRes.BASE_PATH   = platRes.defaultBase;
+    if (!cfgRes.MEDIA_SHARE)  cfgRes.MEDIA_SHARE = platRes.defaultMedia;
+    if (!cfgRes.TZ)           cfgRes.TZ          = browserTz || 'America/Edmonton';
+    if (!cfgRes.LAN_NETWORK)  cfgRes.LAN_NETWORK = '192.168.1.0/24';
+    if (!cfgRes.PUID)         cfgRes.PUID        = '1000';
+    if (!cfgRes.PGID)         cfgRes.PGID        = '1000';
+    if (!cfgRes.VPN_PROV)     cfgRes.VPN_PROV    = 'pia';
+    if (!cfgRes.VPN_CLIENT)   cfgRes.VPN_CLIENT  = 'wireguard';
+    if (!cfgRes.VPN_ENABLED)  cfgRes.VPN_ENABLED = 'yes';
+    // Plex URL: compose from detected LAN IP if not already set
+    if (!cfgRes.PLEX_URL && sysRes.localIp) {
+      cfgRes.PLEX_URL = `http://${sysRes.localIp}:32400`;
+    }
+    // GPU: auto-select if detected by Docker daemon
+    if (!cfgRes.GPU_PROVIDER && platRes.gpuDetected && platRes.gpuDetected !== 'none') {
+      cfgRes.GPU_PROVIDER = platRes.gpuDetected;
+    }
+    if (!cfgRes.GPU_PROVIDER) cfgRes.GPU_PROVIDER = 'none';
+
+    setWizardValues(cfgRes);
+    setSettingsValues(cfgRes);
+    updateFolderCmd();
+
+    // Apply VPN toggle states
+    setVpnEnabled(cfgRes.VPN_ENABLED !== 'no');
+    setVpnEnabledSettings(cfgRes.VPN_ENABLED !== 'no');
+
+    // Update sys bar
+    loadSystem(sysRes);
+
+    // First-run detection: show wizard if paths not configured yet
+    const configured = cfgRes.BASE_PATH && cfgRes.MEDIA_SHARE;
+    if (!configured) nav('wizard');
+  } catch (e) {
+    console.error('Init error:', e);
+    loadSystem();
+  }
+
+  setInterval(loadSystem, 30_000);
+}
+
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,23 @@
+# NVIDIA GPU override for Plex hardware transcoding
+#
+# Requirements:
+#   - NVIDIA drivers installed on Windows host (latest Game Ready or Studio driver)
+#   - Docker Desktop with WSL2 backend (no extra WSL2 setup needed)
+#
+# Usage — merge with the base compose file:
+#   docker compose -f docker-compose.yml -f docker-compose.nvidia.yml up -d
+#
+# The plex-control setup wizard handles this automatically when GPU_PROVIDER=nvidia.
+
+services:
+  plex:
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,video,utility
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu, video]

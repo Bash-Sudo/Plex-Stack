@@ -1,0 +1,10 @@
+# User config — never commit these
+.env
+prefetcharr/config.toml
+prefetcharr/logs/
+
+# Node
+node_modules/
+
+# Docker build artifacts
+*.log

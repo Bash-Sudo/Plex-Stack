@@ -1,0 +1,199 @@
+# Ultimate Plex Stack — Windows Docker Desktop edition
+#
+# Environment Variable Reference:
+# PUID / PGID  — from: id $(whoami) on Linux; use 1000/1000 on Windows
+# TZ           — e.g. America/Edmonton
+# BASE_PATH    — where container config data lives, e.g. C:/Users/jrodg/AppData/Local/PlexStack
+# MEDIA_SHARE  — media root folder, e.g. C:/Users/jrodg/Videos
+#
+# Required folder structure under MEDIA_SHARE (create these before first run):
+#   media/movies
+#   media/tv
+#   downloads/movies
+#   downloads/tv
+#
+# NOTE: network_mode: host is Linux-only. On Windows Docker Desktop, explicit port
+# mapping is used instead. Hardware transcoding (/dev/dri) is also Linux-only and
+# has been removed — use software transcoding or Plex's CPU transcoder on Windows.
+
+---
+name: plex-stack
+services:
+  # Plex — media server
+  plex:
+    image: lscr.io/linuxserver/plex:latest
+    container_name: plex
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - VERSION=docker
+      - PLEX_CLAIM=${PLEX_CLAIM}
+    ports:
+      - 32400:32400
+    volumes:
+      - ${BASE_PATH}/plex/config:/config
+      - ${MEDIA_SHARE}/media/tv:/tv
+      - ${MEDIA_SHARE}/media/movies:/movies
+    restart: unless-stopped
+
+  # Radarr — movie automation
+  radarr:
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: radarr
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - ${BASE_PATH}/radarr/config:/config
+      - ${MEDIA_SHARE}:/data
+    ports:
+      - 7878:7878
+    restart: unless-stopped
+
+  # Sonarr — TV show automation
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:latest
+    container_name: sonarr
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - ${BASE_PATH}/sonarr/config:/config
+      - ${MEDIA_SHARE}:/data
+    ports:
+      - 8989:8989
+    restart: unless-stopped
+
+  # Prowlarr — indexer manager
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:latest
+    container_name: prowlarr
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - ${BASE_PATH}/prowlarr/config:/config
+    ports:
+      - 9696:9696
+    restart: unless-stopped
+
+  # Autobrr — instant torrent grabber via IRC
+  autobrr:
+    container_name: autobrr
+    image: ghcr.io/autobrr/autobrr:latest
+    restart: unless-stopped
+    environment:
+      - TZ=${TZ}
+      - PUID=${PUID}
+      - PGID=${PGID}
+    volumes:
+      - ${BASE_PATH}/autobrr/config:/config
+    ports:
+      - 7474:7474
+
+  # Seerr — user media request portal
+  seerr:
+    image: ghcr.io/seerr-team/seerr:latest
+    init: true
+    container_name: seerr
+    environment:
+      - LOG_LEVEL=debug
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - PORT=5055
+    volumes:
+      - ${BASE_PATH}/seer/config:/app/config
+      - ${MEDIA_SHARE}:/data
+    ports:
+      - 5055:5055
+    restart: unless-stopped
+
+  # qBittorrent with VPN
+  qbit-vpn:
+    image: binhex/arch-qbittorrentvpn:latest
+    container_name: qbit-vpn
+    network_mode: bridge
+    cap_add:
+      - NET_ADMIN
+    environment:
+      - PUID=0
+      - PGID=0
+      - UMASK=000
+      - TZ=${TZ}
+      - WEBUI_PORT=8080
+      - VPN_ENABLED=${VPN_ENABLED:-yes}
+      - VPN_USER=p1234567
+      - VPN_PASS=fI348rW8zT
+      - VPN_PROV=pia
+      - VPN_CLIENT=wireguard
+      - STRICT_PORT_FORWARD=yes
+      - LAN_NETWORK=192.168.1.0/24
+      - ENABLE_STARTUP_SCRIPTS=no
+      - NAME_SERVERS=1.1.1.1,1.0.0.1
+      - ENABLE_PRIVOXY=yes
+    sysctls:
+      - net.ipv4.conf.all.src_valid_mark=1
+    privileged: true
+    ports:
+      - 8080:8080
+      - 8118:8118
+      - 58946:58946
+      - 58946:58946/udp
+    volumes:
+      - ${BASE_PATH}/qbittorrent/config:/config
+      - ${MEDIA_SHARE}:/data
+    restart: unless-stopped
+
+  # Tautulli — Plex analytics
+  tautulli:
+    image: lscr.io/linuxserver/tautulli:latest
+    container_name: tautulli
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - ${BASE_PATH}/tautulli/config:/config
+    ports:
+      - 8181:8181
+    restart: unless-stopped
+
+  # Wizarr — invite link generator for Plex
+  wizarr:
+    container_name: wizarr
+    image: ghcr.io/wizarrrr/wizarr:latest
+    ports:
+      - 5690:5690
+    volumes:
+      - ${BASE_PATH}/wizarr/data/database:/data/database
+    restart: unless-stopped
+
+  # Prefetcharr — auto-download next episode
+  prefetcharr:
+    image: phueber/prefetcharr:latest
+    container_name: prefetcharr
+    volumes:
+      - ./prefetcharr/config.toml:/config
+      - ./prefetcharr/logs:/log
+
+  # Plex Stack Control Panel — setup wizard + dashboard
+  # Opens automatically at http://localhost:7979
+  # For NVIDIA GPU: docker compose -f docker-compose.yml -f docker-compose.nvidia.yml up -d
+  plex-control:
+    build: .
+    container_name: plex-control
+    ports:
+      - 7979:7979
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./:/app
+      - ${MEDIA_SHARE:-/tmp}:/mnt/media:ro
+      - ${BASE_PATH:-/tmp}:/mnt/config:ro
+    restart: unless-stopped
