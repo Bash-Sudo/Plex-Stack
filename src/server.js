@@ -190,9 +190,9 @@ const server = http.createServer(async (req, res) => {
       getDisk('/mnt/media'),
       getDisk('/mnt/config'),
     ]);
-    // Prefer user-configured SERVER_IP — it's the authoritative host LAN IP.
-    // Fall back to detected IP (best-effort from inside Docker).
-    const localIp = cfg.SERVER_IP || getLocalIp();
+    // Only use SERVER_IP from .env — never show Docker Desktop internal IPs
+    // (e.g. 192.168.65.x) which confuse users. Null = not configured yet.
+    const localIp = cfg.SERVER_IP || null;
     return json(res, 200, { localIp, wanIp, mediaDisk, configDisk, localIpIsSet: !!cfg.SERVER_IP });
   }
 

@@ -233,8 +233,11 @@ a.ext:hover{text-decoration:underline}
   <!-- System info bar -->
   <div class="sys-bar">
     <div class="sys-item">
-      <div class="sys-label">Local IP <span id="sys-local-hint" style="font-weight:400;color:var(--yellow);display:none" title="Set SERVER_IP in Settings for your real LAN IP">⚠ set SERVER_IP</span></div>
+      <div class="sys-label">Machine IP</div>
       <div class="sys-value mono" id="sys-local">—</div>
+      <div id="sys-local-hint" style="display:none;margin-top:6px;font-size:11px;color:var(--yellow)">
+        Not set — add your IP in <a onclick="nav('settings')" style="color:var(--primary);cursor:pointer;text-decoration:underline">Settings</a>
+      </div>
     </div>
     <div class="sys-item">
       <div class="sys-label">WAN IP</div>
@@ -719,7 +722,7 @@ async function loadSystem(preloaded) {
   try {
     const d = preloaded || await fetch('/api/system').then(r => r.json());
     document.getElementById('sys-local').textContent = d.localIp || '—';
-    document.getElementById('sys-local-hint').style.display = d.localIpIsSet ? 'none' : '';
+    document.getElementById('sys-local-hint').style.display = d.localIpIsSet ? 'none' : 'block';
     document.getElementById('sys-wan').textContent   = d.wanIp   || '—';
     updateDisk('sys-media', d.mediaDisk);
     updateDisk('sys-config', d.configDisk);
