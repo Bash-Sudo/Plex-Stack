@@ -138,11 +138,18 @@ generated temporary admin password: AbCd1234
 
 Go to **http://localhost:8080**, log in with username **admin** and that password, then immediately change it under **Tools > Options > Web UI > Authentication**.
 
-Set download paths under **Tools > Options > Downloads**:
+**Set the default download path** under **Tools > Options > Downloads**:
 
-- Default save path: /data/downloads
-- Create category **movies** with save path /data/downloads/movies
-- Create category **tv** with save path /data/downloads/tv
+- Default save path: `/downloads`
+
+**Add categories** — right-click the sidebar → Add category:
+
+| Category Name | Save Path |
+|---|---|
+| `radarr` | `/downloads/radarr` |
+| `sonarr` | `/downloads/sonarr` |
+
+> These paths map directly to your Windows `Videos\downloads\radarr` and `Videos\downloads\sonarr` folders.
 
 ---
 
@@ -154,44 +161,48 @@ Prowlarr manages all your indexers and automatically shares them with Radarr and
 
 | App | URL | API Key |
 |---|---|---|
-| Radarr | http://radarr:7878 | Radarr > Settings > General |
-| Sonarr | http://sonarr:8989 | Sonarr > Settings > General |
+| Radarr | `http://radarr:7878` | Radarr > Settings > General |
+| Sonarr | `http://sonarr:8989` | Sonarr > Settings > General |
 
 Then add indexers under **Indexers > Add Indexer**. Any indexers you add here automatically appear in Radarr and Sonarr.
 
-> Use Docker service names (radarr, sonarr, qbit-vpn) as hostnames when services connect to each other — not localhost.
+> Use Docker service names (`radarr`, `sonarr`, `qbit-vpn`) as hostnames — not `localhost`.
 
 ---
 
 ### 3 — Radarr Movies
 
-**Settings > Media Management > Root Folders > Add:** /data/media/movies
+**Settings > Media Management > Root Folders > Add:** `/data/media/movies`
 
 **Settings > Download Clients > Add > qBittorrent:**
 
 | Field | Value |
 |---|---|
-| Host | qbit-vpn |
-| Port | 8080 |
-| Category | movies |
-| Username | admin |
+| Host | `qbit-vpn` |
+| Port | `8080` |
+| Category | `radarr` |
+| Username | `admin` |
 | Password | your qBittorrent password |
+
+Radarr will look for completed downloads in `/data/downloads/radarr` and move them to `/data/media/movies`.
 
 ---
 
 ### 4 — Sonarr TV Shows
 
-**Settings > Media Management > Root Folders > Add:** /data/media/tv
+**Settings > Media Management > Root Folders > Add:** `/data/media/tv`
 
 **Settings > Download Clients > Add > qBittorrent:**
 
 | Field | Value |
 |---|---|
-| Host | qbit-vpn |
-| Port | 8080 |
-| Category | tv |
-| Username | admin |
+| Host | `qbit-vpn` |
+| Port | `8080` |
+| Category | `sonarr` |
+| Username | `admin` |
 | Password | your qBittorrent password |
+
+Sonarr will look for completed downloads in `/data/downloads/sonarr` and move them to `/data/media/tv`.
 
 ---
 

@@ -121,6 +121,7 @@ services:
     volumes:
       - ${BASE_PATH:-/tmp}/qbittorrent/config:/config
       - ${MEDIA_SHARE:-/tmp}:/data
+      - ${MEDIA_SHARE:-/tmp}/downloads:/downloads   # clean /downloads path for qBit categories
     restart: unless-stopped
 
   # ── Tautulli — Plex analytics ──────────────────────────────────────────────
