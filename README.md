@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="public/logo.png" width="300" alt="Plex Stack">
+  <img src="public/logo.png" width="320" alt="Plex Stack">
 </p>
 
 <h1 align="center">Plex Stack</h1>
@@ -10,207 +10,298 @@
 
 ---
 
-## ⚡ Windows Quick Start
+## What Is Plex Stack?
 
-### [⬇ Download Windows_Install.ps1](https://raw.githubusercontent.com/Bash-Sudo/Plex-Stack/main/Windows_Install.ps1)
-
-**How to run it:**
-
-> **Option A — Easiest:**
-> Right-click `Windows_Install.ps1` → **Run with PowerShell** → click **Yes** on the administrator prompt
-
-> **Option B — If Option A doesn't work:**
-> 1. Press **Windows key**, type **PowerShell**
-> 2. Right-click **Windows PowerShell** → **Run as Administrator**
-> 3. Paste this and press Enter:
-> ```powershell
-> Set-ExecutionPolicy Bypass -Scope Process -Force; .\Windows_Install.ps1
-> ```
-
-**What it installs (in order):**
-1. **WSL2** — Windows Subsystem for Linux (required for Docker) — *may need a restart*
-2. **Docker Desktop** — the engine that runs everything
-3. **Git** — for downloading and updating the stack
-4. **Plex Stack** — clones the repo and launches the setup wizard
-
-**Already have Docker Desktop?** The installer detects WSL2 and Docker and skips straight to setup.
+Plex Stack bundles eleven services into a single installer. You get Plex for streaming, automatic movie and TV-show downloading, a request portal for family and friends, analytics, and a browser-based control panel — all managed from one dashboard at **http://localhost:7979**.
 
 ---
 
 ## What You Get
 
-| Service | What It Does | Web UI |
+| Service | Port | What It Does |
 |---|---|---|
-| **Plex** | Stream your movies and TV shows anywhere | :32400 |
-| **Radarr** | Automatically finds and downloads movies | :7878 |
-| **Sonarr** | Automatically finds and downloads TV shows | :8989 |
-| **Prowlarr** | Manages your download sources (indexers) | :9696 |
-| **qBittorrent** | Downloads files — with optional VPN protection | :8080 |
-| **Tautulli** | Plex statistics and watch history | :8181 |
-| **Autobrr** | Grabs new torrents the moment they release | :7474 |
-| **Seerr** | Let family and friends request movies and shows | :5055 |
-| **Wizarr** | Invite people to your Plex server | :5690 |
-| **Prefetcharr** | Pre-downloads the next episode while you watch | — |
-| **Control Panel** | Browser dashboard for everything above | :7979 |
+| **Plex** | 32400 | Stream your movies and TV shows on any device, anywhere |
+| **Radarr** | 7878 | Automatically finds and downloads movies |
+| **Sonarr** | 8989 | Automatically finds and downloads TV shows |
+| **Prowlarr** | 9696 | Central indexer manager — feeds Radarr and Sonarr |
+| **qBittorrent** | 8080 | Download client |
+| **Tautulli** | 8181 | Plex statistics, watch history, and notifications |
+| **Autobrr** | 7474 | Grabs new torrents the moment they appear on IRC |
+| **Seerr** | 5055 | Request portal — lets family and friends ask for titles |
+| **Wizarr** | 5690 | Invite manager — sends Plex invite links |
+| **Prefetcharr** | — | Pre-downloads the next episode while you watch |
+| **Control Panel** | 7979 | Browser dashboard for all of the above |
 
 ---
 
-## Windows Installation
+## Requirements
 
-### Requirements
-- Windows 10 (version 1709+) or Windows 11
-- 8 GB RAM minimum, 16 GB recommended
+- **Windows 10** (version 1709 or later) or **Windows 11**
+- **8 GB RAM** minimum — 16 GB recommended
 - An internet connection
+- A free [Plex account](https://www.plex.tv/sign-up/)
 
-No Docker, Git, or technical knowledge required — the installer handles everything.
-
----
-
-### Step 1 — Download & Run the Installer
-
-**[⬇ Download Windows_Install.ps1](https://raw.githubusercontent.com/Bash-Sudo/Plex-Stack/main/Windows_Install.ps1)**
-
-| Situation | What happens |
-|---|---|
-| **WSL2 not installed** | Installer enables it — Windows restarts, then run again |
-| **Docker not installed** | Installer downloads and installs Docker Desktop automatically |
-| **Docker already installed** | Skips straight to downloading Plex Stack |
-| **Windows restart needed** | Installer tells you clearly — just restart and run again |
-
-> 💡 The installer creates a **"Start Plex Stack"** shortcut on your Desktop for future use.
+No prior Docker, Git, or server experience required.
 
 ---
 
-### Step 2 — What the Installer Does (in order)
+## Installation (Windows)
 
-1. Enables **WSL2** if needed (Windows restart may be required)
-2. Installs **Docker Desktop** if not already present
-3. Installs **Git** if not already present
-4. Downloads Plex Stack to your computer
-5. Starts the control panel and opens the **setup wizard** in your browser
+### Step 1 — Download the Installer
 
----
+**[Download Windows_Install.ps1](https://raw.githubusercontent.com/Bash-Sudo/Plex-Stack/main/Windows_Install.ps1)**
 
-### Step 3 — Setup Wizard
+Right-click the downloaded file and choose **Run with PowerShell**, then click **Yes** on the administrator prompt.
 
-The wizard opens automatically in your browser and walks you through:
+If right-click does not show that option, open PowerShell as Administrator and run:
+
+```powershell
+Set-ExecutionPolicy Bypass -Scope Process -Force; .\Windows_Install.ps1
+```
+
+### Step 2 — What the Installer Does
 
 | Step | What Happens |
 |---|---|
-| **1 — System** | Timezone and GPU auto-detected for you |
-| **2 — Folders** | Choose where your media files will live |
-| **3 — VPN** | Optional — protect downloads on private networks |
-| **4 — Plex Claim** | Links Plex to your account (grab token right before deploying) |
-| **▶ Deploy #1** | Stack starts — modal shows progress |
-| **5 — API Keys** | Connect Sonarr, Radarr, and Plex together |
-| **Done!** | Redirected to your live dashboard |
+| **WSL2** | Enables Windows Subsystem for Linux — may require a one-time restart |
+| **Docker Desktop** | Downloads and installs if not already present |
+| **Git** | Installs if not already present |
+| **Plex Stack** | Downloads and launches the setup wizard in your browser |
 
----
+If a restart is needed the installer tells you clearly. Restart, run it again, and it picks up where it left off. A **Start Plex Stack** shortcut is created on your Desktop.
 
-## Daily Use
+### Step 3 — Setup Wizard
 
-Double-click **`Start_Plex-Stack.bat`** in your Plex Stack folder.
+The wizard opens at **http://localhost:7979** and walks you through every step:
 
-It checks if Docker is running (starts it if not), brings up any stopped containers, and opens your browser automatically.
+| Step | What You Do |
+|---|---|
+| **1 — System** | Timezone and GPU are auto-detected — just confirm |
+| **2 — Folders** | Choose where your media lives (auto-filled defaults are fine) |
+| **3 — VPN** | Optional — enable if you want VPN on your download client |
+| **4 — Plex Claim** | Paste a one-time token to link Plex to your account |
+| **Deploy Phase 1** | All services except Plex start — watch the progress bar |
+| **5 — API Keys** | Connect Radarr, Sonarr, and Plex together |
+| **6 — Plex Claim** | Get your claim token right before clicking Deploy |
+| **Deploy Phase 2** | Plex starts — redirected to your live dashboard |
 
-> 💡 The installer creates a **Desktop shortcut** so you don't have to find the folder.
-
-Bookmark **http://localhost:7979** for quick access.
-
----
-
-## After First Deploy — API Keys
-
-Once the stack is running, the wizard's Step 5 will guide you through connecting everything. Here's where to find each key:
-
-### Sonarr API Key
-1. Open [Sonarr](http://localhost:8989) → **Settings → General**
-2. Copy the **API Key** at the top of the page
-3. Paste it in the wizard or Settings panel
-
-### Radarr API Key
-1. Open [Radarr](http://localhost:7878) → **Settings → General**
-2. Copy the **API Key** at the top of the page
-
-### Plex Token
-1. Sign in to Plex, click your **avatar → Account**
-2. In the address bar, add `/:/prefs` or visit the [token guide](https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/)
-
-### Plex Claim Token (first setup only)
-Get a one-time claim token from **[plex.tv/claim](https://www.plex.tv/claim)**
-> ⚠️ Expires in 4 minutes — get it right before clicking Deploy
-
----
-
-## NVIDIA GPU Transcoding
-
-If you have an NVIDIA GPU, the wizard auto-detects it and offers hardware transcoding (NVENC/NVDEC).
-
-**Requirements:**
-- Up-to-date NVIDIA drivers (Game Ready or Studio)
-- Docker Desktop with WSL2 backend (default on Windows)
-
-No extra software needed — Docker Desktop handles GPU access automatically through WSL2.
+> **Plex Claim Token:** Get it from [plex.tv/claim](https://www.plex.tv/claim) right before clicking Deploy — it expires in 4 minutes. This is a one-time setup token, different from your regular Plex Token.
 
 ---
 
 ## Folder Structure
 
-The installer creates this structure in your Videos folder:
+The installer creates this structure in your Windows Videos folder:
 
 ```
 Videos/
-├── media/
-│   ├── movies/     ← Radarr puts finished movies here
-│   └── tv/         ← Sonarr puts finished TV shows here
-└── downloads/
-    ├── movies/     ← qBittorrent downloads to here first
-    └── tv/
+  media/
+    movies/       Radarr moves finished movies here
+    tv/           Sonarr moves finished TV shows here
+  downloads/
+    movies/       qBittorrent downloads movies here first
+    tv/           qBittorrent downloads TV shows here first
 ```
 
-Radarr and Sonarr move files from `downloads/` to `media/` automatically using hardlinks — no copying, instant moves.
+Radarr and Sonarr use hardlinks to move files instantly from downloads to media — no copying, no extra disk space used.
+
+### Docker Paths vs Windows Paths
+
+Inside Docker containers your Videos folder is mounted at /data. Whenever any service asks for a file path always use the /data format — never the Windows path.
+
+| Purpose | Windows Path | Docker Path — use this |
+|---|---|---|
+| Movies | C:\Users\...\Videos\media\movies | /data/media/movies |
+| TV Shows | C:\Users\...\Videos\media\tv | /data/media/tv |
+| Movie downloads | C:\Users\...\Videos\downloads\movies | /data/downloads/movies |
+| TV downloads | C:\Users\...\Videos\downloads\tv | /data/downloads/tv |
+
+---
+
+## Post-Install Service Configuration
+
+After the wizard completes configure each service in this order.
+
+### 1 — qBittorrent First Login
+
+The image generates a random temporary password on first start. Find it with:
+
+```powershell
+docker logs qbit-vpn 2>&1 | Select-String "password"
+```
+
+Look for a line like:
+
+```
+generated temporary admin password: AbCd1234
+```
+
+Go to **http://localhost:8080**, log in with username **admin** and that password, then immediately change it under **Tools > Options > Web UI > Authentication**.
+
+Set download paths under **Tools > Options > Downloads**:
+
+- Default save path: /data/downloads
+- Create category **movies** with save path /data/downloads/movies
+- Create category **tv** with save path /data/downloads/tv
+
+---
+
+### 2 — Prowlarr Indexer Hub
+
+Prowlarr manages all your indexers and automatically shares them with Radarr and Sonarr.
+
+**Settings > Apps > Add Application:**
+
+| App | URL | API Key |
+|---|---|---|
+| Radarr | http://radarr:7878 | Radarr > Settings > General |
+| Sonarr | http://sonarr:8989 | Sonarr > Settings > General |
+
+Then add indexers under **Indexers > Add Indexer**. Any indexers you add here automatically appear in Radarr and Sonarr.
+
+> Use Docker service names (radarr, sonarr, qbit-vpn) as hostnames when services connect to each other — not localhost.
+
+---
+
+### 3 — Radarr Movies
+
+**Settings > Media Management > Root Folders > Add:** /data/media/movies
+
+**Settings > Download Clients > Add > qBittorrent:**
+
+| Field | Value |
+|---|---|
+| Host | qbit-vpn |
+| Port | 8080 |
+| Category | movies |
+| Username | admin |
+| Password | your qBittorrent password |
+
+---
+
+### 4 — Sonarr TV Shows
+
+**Settings > Media Management > Root Folders > Add:** /data/media/tv
+
+**Settings > Download Clients > Add > qBittorrent:**
+
+| Field | Value |
+|---|---|
+| Host | qbit-vpn |
+| Port | 8080 |
+| Category | tv |
+| Username | admin |
+| Password | your qBittorrent password |
+
+---
+
+### 5 — Seerr Request Portal
+
+Open **http://localhost:5055** and follow the setup:
+
+1. Sign in with your Plex account
+2. Connect to Plex server at http://plex:32400
+3. Add Radarr at http://radarr:7878 with its API key
+4. Add Sonarr at http://sonarr:8989 with its API key
+
+---
+
+## Finding Your Plex Token
+
+Some services like Prefetcharr need your permanent Plex authentication token. Find it in this file:
+
+```
+C:\Users\USERNAME\AppData\Local\Plex-Stack\plex\config\Library\Application Support\Plex Media Server\Preferences.xml
+```
+
+Open it in Notepad and search for PlexOnlineToken:
+
+```
+PlexOnlineToken="xxxxxxxxxxxxxxxxxxxx"
+```
+
+Copy the value and paste it into Settings > Plex Token in the control panel.
+
+> This is your permanent Plex token — completely different from the one-time Plex Claim Token used during wizard setup.
+
+---
+
+## NVIDIA GPU Transcoding
+
+The wizard auto-detects NVIDIA GPUs and offers hardware transcoding (NVENC/NVDEC). No extra software needed — Docker Desktop handles GPU access through WSL2.
+
+Requirements:
+- Up-to-date NVIDIA drivers (Game Ready or Studio)
+- Docker Desktop with WSL2 backend (the default on Windows)
+
+---
+
+## Daily Use
+
+Double-click **Start Plex Stack** on your Desktop. It checks whether Docker is running, starts any stopped containers, and opens http://localhost:7979 in your browser.
 
 ---
 
 ## Troubleshooting
 
-**Control panel not loading at localhost:7979**
-→ Double-click `Start_Plex-Stack.bat` — it checks and starts everything
+**Control panel will not load**
+Run Start_Plex-Stack.bat — starts Docker and all containers automatically.
 
 **A container shows Stopped on the dashboard**
-→ Click **Restart** on that card in the dashboard
+Click Restart on that service card in the dashboard.
 
-**Want to run the setup wizard again**
-→ Go to `http://localhost:7979` → click **Setup Wizard** in the nav
+**Setup wizard keeps appearing**
+Click the "Already configured? Go to Dashboard" button on the wizard welcome page.
 
-**Starting completely fresh**
-```batch
-cd C:\Plex-Stack
+**qBittorrent password unknown**
+
+```powershell
+docker logs qbit-vpn 2>&1 | Select-String "password"
+```
+
+**Services show connection errors to each other**
+Use Docker service names as hostnames, not localhost:
+
+| Service | Hostname to use |
+|---|---|
+| qBittorrent | qbit-vpn:8080 |
+| Radarr | radarr:7878 |
+| Sonarr | sonarr:8989 |
+| Prowlarr | prowlarr:9696 |
+| Plex | plex:32400 |
+
+**Full clean restart**
+
+```powershell
+cd C:\Users\USERNAME\Plex-Stack
 docker compose down --remove-orphans
 docker compose up -d
 ```
 
-**Updating to the latest version**
-→ Click **Update All** on the dashboard, or run:
-```batch
-cd C:\Plex-Stack
+**Update to latest version**
+Click Update All on the dashboard, or run:
+
+```powershell
+cd C:\Users\USERNAME\Plex-Stack
 git pull
-docker compose up -d --build
+docker compose up -d --build plex-control
 ```
 
 ---
 
-## Linux / macOS
+## Linux and macOS
 
-Clone the repo and edit `.env` with your settings, then:
 ```bash
+git clone https://github.com/Bash-Sudo/Plex-Stack.git
+cd Plex-Stack
 cp prefetcharr/config.example.toml prefetcharr/config.toml
 docker compose up -d --build
 ```
+
 Open http://localhost:7979 for the control panel.
 
 ---
 
 ## Credits
 
-Based on [DonMcD's Ultimate Plex Stack](https://github.com/DonMcD/ultimate-plex-stack) with a browser-based control panel, setup wizard, and Windows installer added on top.
+Based on [DonMcD's Ultimate Plex Stack](https://github.com/DonMcD/ultimate-plex-stack), extended with a browser-based control panel, guided setup wizard, automated Windows installer, live container monitoring, and NVIDIA GPU support.

@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "Plex Stack Control Panel",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["bin/setup.js"],
+      "port": 7979
+    }
+  ]
+}
