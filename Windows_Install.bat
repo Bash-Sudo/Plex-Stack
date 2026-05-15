@@ -6,7 +6,7 @@ title Plex Stack Installer
 ::  UPDATE THIS LINE with your actual GitHub repo URL
 ::  before sharing this file with others!
 :: ============================================================
-set "REPO_URL=https://github.com/YOUR_USERNAME/plex-stack.git"
+set "REPO_URL=https://github.com/Bash-Sudo/plex-stack.git"
 set "DEFAULT_DIR=%USERPROFILE%\Plex-Stack"
 
 cls

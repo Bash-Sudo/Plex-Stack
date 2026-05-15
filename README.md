@@ -41,7 +41,7 @@ No Docker, Git, or technical knowledge required — the installer handles everyt
 
 ### Step 1 — Download the Installer
 
-**[⬇ Download Windows_Install.bat](https://raw.githubusercontent.com/YOUR_USERNAME/plex-stack/main/Windows_Install.bat)**
+**[⬇ Download Windows_Install.bat](https://raw.githubusercontent.com/Bash-Sudo/plex-stack/main/Windows_Install.bat)**
 
 > Right-click the downloaded file → **Run as Administrator**
 
