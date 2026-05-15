@@ -1,12 +1,34 @@
 <p align="center">
-  <img src="ultimate_plex_stack_transparent_bg.png" width="400" alt="Ultimate Plex Stack">
+  <img src="public/logo.png" width="300" alt="Plex Stack">
 </p>
 
-<h1 align="center">Ultimate Plex Stack</h1>
+<h1 align="center">Plex Stack</h1>
 
 <p align="center">
   A complete, beginner-friendly home media server — set up in minutes, runs automatically.
 </p>
+
+---
+
+## ⚡ Windows Quick Start
+
+<p align="center">
+
+### [⬇ Download Windows Installer](https://raw.githubusercontent.com/Bash-Sudo/Plex-Stack/main/Windows_Install.bat)
+
+</p>
+
+> **Right-click → Run as Administrator** — that's it.
+
+**Already have Docker Desktop?** The installer detects it and skips straight to downloading the stack and opening the setup wizard.
+
+**Don't have Docker Desktop?** No problem — the installer downloads and installs it for you automatically. Windows may need to restart once for Docker's WSL2 setup, then just run the installer again.
+
+**What happens after you run it:**
+- Docker Desktop installs (if needed)
+- Plex Stack downloads to your computer
+- The setup wizard opens in your browser automatically
+- Follow the 6-step wizard to configure everything
 
 ---
 
@@ -39,22 +61,28 @@ No Docker, Git, or technical knowledge required — the installer handles everyt
 
 ---
 
-### Step 1 — Download the Installer
+### Step 1 — Download & Run the Installer
 
 **[⬇ Download Windows_Install.bat](https://raw.githubusercontent.com/Bash-Sudo/Plex-Stack/main/Windows_Install.bat)**
 
-> Right-click the downloaded file → **Run as Administrator**
+Right-click → **Run as Administrator**
+
+| Situation | What happens |
+|---|---|
+| **Docker not installed** | Installer downloads and installs Docker Desktop automatically |
+| **Docker already installed** | Installer skips Docker setup and goes straight to Plex Stack |
+| **Windows restart needed** | Installer tells you — just restart and run it again |
+
+> 💡 The installer creates a **"Start Plex Stack"** shortcut on your Desktop for future use.
 
 ---
 
-### Step 2 — The Installer Will
+### Step 2 — What the Installer Does
 
-1. Install **Docker Desktop** (the engine that runs everything)
-2. Install **Git** (for downloading and updating the stack)
-3. Download Plex Stack to your computer
-4. Start everything up and open the setup wizard in your browser
-
-> ⚠️ **Heads up:** The first time you install Docker Desktop, Windows may need to restart. If it does, just run the installer again after restarting.
+1. Installs **Docker Desktop** if not already present (the engine that runs everything)
+2. Installs **Git** if not already present (for updates)
+3. Downloads Plex Stack to your computer
+4. Starts the control panel and opens the **setup wizard** in your browser
 
 ---
 

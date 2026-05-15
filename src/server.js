@@ -110,9 +110,23 @@ const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, `http://localhost:${PORT}`);
   const { pathname } = url;
 
-  // Static
-  if (req.method === 'GET' && pathname === '/') {
-    return serveFile(res, path.join(PUBLIC_DIR, 'index.html'), 'text/html; charset=utf-8');
+  // Static files from public/
+  if (req.method === 'GET' && !pathname.startsWith('/api/')) {
+    const MIME = {
+      '.html': 'text/html; charset=utf-8',
+      '.png':  'image/png',
+      '.jpg':  'image/jpeg',
+      '.ico':  'image/x-icon',
+      '.svg':  'image/svg+xml',
+      '.css':  'text/css',
+      '.js':   'application/javascript',
+    };
+    const target = pathname === '/'
+      ? path.join(PUBLIC_DIR, 'index.html')
+      : path.join(PUBLIC_DIR, pathname);
+    const ext  = path.extname(target).toLowerCase();
+    const mime = MIME[ext] || 'application/octet-stream';
+    return serveFile(res, target, mime);
   }
 
   // Platform defaults

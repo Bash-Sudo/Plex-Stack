@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Plex Stack Control Panel</title>
+<link rel="icon" type="image/png" href="/logo.png">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -185,7 +186,10 @@ a.ext:hover{text-decoration:underline}
 
 <!-- ── Navigation ── -->
 <nav>
-  <div class="nav-brand"><em>Plex Stack</em> Control Panel</div>
+  <div class="nav-brand">
+    <img src="/logo.png" height="34" alt="Plex Stack" style="vertical-align:middle;margin-right:8px;border-radius:4px">
+    <span>Control Panel</span>
+  </div>
   <div class="nav-tabs">
     <button class="tab active" id="tab-dashboard" onclick="nav('dashboard')">Dashboard</button>
     <button class="tab" id="tab-settings"  onclick="nav('settings')">Settings</button>
@@ -382,7 +386,10 @@ a.ext:hover{text-decoration:underline}
 
   <!-- Step 0: Welcome -->
   <div class="wiz-step active" id="wz-0">
-    <h2>Welcome to Ultimate Plex Stack</h2>
+    <div style="text-align:center;margin-bottom:22px">
+      <img src="/logo.png" alt="Plex Stack" style="width:140px;border-radius:12px">
+    </div>
+    <h2>Welcome to Plex Stack</h2>
     <p>This wizard walks you through the one-time setup. It takes about 5 minutes.<br>Your answers are saved as you go — you can close and come back anytime.</p>
     <div class="welcome-ips">
       <div class="ip-card"><div class="ip-label">Local IP</div><div class="ip-val" id="w-local-ip">Detecting…</div></div>
