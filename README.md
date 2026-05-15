@@ -12,23 +12,28 @@
 
 ## ⚡ Windows Quick Start
 
-<p align="center">
+### [⬇ Download Windows_Install.ps1](https://raw.githubusercontent.com/Bash-Sudo/Plex-Stack/main/Windows_Install.ps1)
 
-### [⬇ Download Windows Installer](https://raw.githubusercontent.com/Bash-Sudo/Plex-Stack/main/Windows_Install.bat)
+**How to run it:**
 
-</p>
+> **Option A — Easiest:**
+> Right-click `Windows_Install.ps1` → **Run with PowerShell** → click **Yes** on the administrator prompt
 
-> **Right-click → Run as Administrator** — that's it.
+> **Option B — If Option A doesn't work:**
+> 1. Press **Windows key**, type **PowerShell**
+> 2. Right-click **Windows PowerShell** → **Run as Administrator**
+> 3. Paste this and press Enter:
+> ```powershell
+> Set-ExecutionPolicy Bypass -Scope Process -Force; .\Windows_Install.ps1
+> ```
 
-**Already have Docker Desktop?** The installer detects it and skips straight to downloading the stack and opening the setup wizard.
+**What it installs (in order):**
+1. **WSL2** — Windows Subsystem for Linux (required for Docker) — *may need a restart*
+2. **Docker Desktop** — the engine that runs everything
+3. **Git** — for downloading and updating the stack
+4. **Plex Stack** — clones the repo and launches the setup wizard
 
-**Don't have Docker Desktop?** No problem — the installer downloads and installs it for you automatically. Windows may need to restart once for Docker's WSL2 setup, then just run the installer again.
-
-**What happens after you run it:**
-- Docker Desktop installs (if needed)
-- Plex Stack downloads to your computer
-- The setup wizard opens in your browser automatically
-- Follow the 6-step wizard to configure everything
+**Already have Docker Desktop?** The installer detects WSL2 and Docker and skips straight to setup.
 
 ---
 
@@ -63,26 +68,26 @@ No Docker, Git, or technical knowledge required — the installer handles everyt
 
 ### Step 1 — Download & Run the Installer
 
-**[⬇ Download Windows Installer](https://raw.githubusercontent.com/Bash-Sudo/Plex-Stack/main/Windows_Install.bat)
-
-Right-click → **Run as Administrator**
+**[⬇ Download Windows_Install.ps1](https://raw.githubusercontent.com/Bash-Sudo/Plex-Stack/main/Windows_Install.ps1)**
 
 | Situation | What happens |
 |---|---|
+| **WSL2 not installed** | Installer enables it — Windows restarts, then run again |
 | **Docker not installed** | Installer downloads and installs Docker Desktop automatically |
-| **Docker already installed** | Installer skips Docker setup and goes straight to Plex Stack |
-| **Windows restart needed** | Installer tells you — just restart and run it again |
+| **Docker already installed** | Skips straight to downloading Plex Stack |
+| **Windows restart needed** | Installer tells you clearly — just restart and run again |
 
 > 💡 The installer creates a **"Start Plex Stack"** shortcut on your Desktop for future use.
 
 ---
 
-### Step 2 — What the Installer Does
+### Step 2 — What the Installer Does (in order)
 
-1. Installs **Docker Desktop** if not already present (the engine that runs everything)
-2. Installs **Git** if not already present (for updates)
-3. Downloads Plex Stack to your computer
-4. Starts the control panel and opens the **setup wizard** in your browser
+1. Enables **WSL2** if needed (Windows restart may be required)
+2. Installs **Docker Desktop** if not already present
+3. Installs **Git** if not already present
+4. Downloads Plex Stack to your computer
+5. Starts the control panel and opens the **setup wizard** in your browser
 
 ---
 

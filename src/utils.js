@@ -49,6 +49,9 @@ function buildEnvContent(v) {
     '# VPN for qBittorrent: yes | no',
     `VPN_ENABLED=${g('VPN_ENABLED', 'yes')}`,
     '',
+    '# Setup wizard completion flag — do not edit manually',
+    `SETUP_COMPLETE=${g('SETUP_COMPLETE', 'no')}`,
+    '',
   ].join('\n');
 }
 

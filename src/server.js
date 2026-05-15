@@ -206,29 +206,47 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // Compose operation SSE stream  (?action=deploy|update)
+  // Compose operation SSE stream
+  // ?action = deploy | update | phase1 | phase2
   if (req.method === 'GET' && pathname === '/api/stream/compose') {
     const action = url.searchParams.get('action') || 'deploy';
     const send   = sse(res);
 
+    // Heartbeat so browser doesn't time out during long operations
+    const hb = setInterval(() => { try { res.write(': ping\n\n'); } catch {} }, 15000);
+
+    const finish = (code) => {
+      clearInterval(hb);
+      send('done', { code });
+      res.end();
+    };
+
     try {
+      if (action === 'phase1') {
+        const code = await docker.runPhase(1, l => send('log', { line: l }));
+        return finish(code);
+      }
+      if (action === 'phase2') {
+        const code = await docker.runPhase(2, l => send('log', { line: l }));
+        return finish(code);
+      }
       if (action === 'update') {
         send('log', { line: 'Pulling latest images…' });
         const pullCode = await docker.runCompose(['pull'], l => send('log', { line: l }));
-        if (pullCode !== 0) { send('done', { code: pullCode }); return res.end(); }
+        if (pullCode !== 0) return finish(pullCode);
         send('log', { line: '' });
         send('log', { line: 'Recreating containers…' });
       }
+      // default: full deploy
       const upCode = await docker.runCompose(
         ['up', '-d', '--remove-orphans'],
         l => send('log', { line: l }),
       );
-      send('done', { code: upCode });
+      finish(upCode);
     } catch (e) {
       send('log', { line: `Error: ${e.message}` });
-      send('done', { code: 1 });
+      finish(1);
     }
-    return res.end();
   }
 
   // Restart individual container

@@ -21,6 +21,7 @@ nav{background:var(--surf);border-bottom:1px solid var(--border);padding:0 24px;
 .nav-brand em{color:var(--primary);font-style:normal}
 .nav-tabs{display:flex;gap:2px;flex:1}
 .tab{background:none;border:none;color:var(--muted);padding:0 16px;height:52px;font-size:13px;font-weight:500;cursor:pointer;border-bottom:2px solid transparent;font-family:var(--font);transition:color .15s,border-color .15s}
+.tab:disabled{opacity:.3;cursor:not-allowed;pointer-events:none}
 .tab:hover{color:var(--text)}
 .tab.active{color:var(--primary);border-bottom-color:var(--primary)}
 #run-badge{background:var(--surf2);border:1px solid var(--border);border-radius:20px;padding:3px 12px;font-size:12px;font-weight:600;white-space:nowrap}
@@ -164,6 +165,17 @@ a.ext:hover{text-decoration:underline}
 .tog-btn{background:var(--surf2);border:none;color:var(--muted);padding:7px 16px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font);transition:background .15s,color .15s}
 .tog-btn.active{background:var(--primary);color:#0f172a}
 .tog-btn:first-child{border-right:1px solid var(--border)}
+
+/* ── Deploy progress bar ── */
+.deploy-wrap{background:var(--surf);border:1px solid var(--border);border-radius:var(--radius);padding:24px;margin-top:8px}
+.deploy-title{font-size:15px;font-weight:600;margin-bottom:6px}
+.deploy-sub{font-size:12px;color:var(--muted);margin-bottom:16px}
+.prog-track{background:var(--surf2);border-radius:4px;height:10px;overflow:hidden;margin-bottom:8px}
+.prog-fill{height:100%;border-radius:4px;background:var(--primary);transition:width .4s ease}
+.prog-label{font-size:12px;color:var(--muted);text-align:right;font-variant-numeric:tabular-nums}
+.deploy-status{margin-top:14px;font-size:13px;min-height:20px}
+.deploy-status.ok{color:var(--green)}
+.deploy-status.err{color:var(--red)}
 
 /* ── Wizard ── */
 .wizard-wrap{max-width:640px;margin:0 auto}
@@ -404,85 +416,74 @@ a.ext:hover{text-decoration:underline}
       <img src="/logo.png" alt="Plex Stack" style="width:140px;border-radius:12px">
     </div>
     <h2>Welcome to Plex Stack</h2>
-    <p>This wizard walks you through the one-time setup. It takes about 5 minutes.<br>Your answers are saved as you go — you can close and come back anytime.</p>
+    <p>This wizard walks you through setup in two phases.<br>Your answers save as you go — you can close and return anytime.</p>
     <div class="welcome-ips">
       <div class="ip-card"><div class="ip-label">Local IP</div><div class="ip-val" id="w-local-ip">Detecting…</div></div>
       <div class="ip-card"><div class="ip-label">WAN IP</div><div class="ip-val" id="w-wan-ip">Detecting…</div></div>
     </div>
     <div class="info-box">
-      <strong>What you're setting up:</strong> Plex media server · Radarr &amp; Sonarr (auto-download) · Prowlarr (indexers) · qBittorrent with VPN · Tautulli · Autobrr · Wizarr · Prefetcharr
-    </div>
-    <p style="font-size:13px;color:var(--muted)">Download the launch script — double-click it anytime to start your stack and open this control panel.</p>
-    <div style="display:flex;gap:10px;margin-top:12px">
-      <a href="/api/download/start.bat" class="btn-ghost">⬇ Download start.bat <span style="font-size:11px;opacity:.7">(Windows)</span></a>
-      <a href="/api/download/start.sh"  class="btn-ghost">⬇ Download start.sh <span style="font-size:11px;opacity:.7">(Linux/Mac)</span></a>
+      <strong>What you are setting up:</strong> Plex · Radarr · Sonarr · Prowlarr · qBittorrent · Tautulli · Autobrr · Seerr · Wizarr · Prefetcharr
     </div>
   </div>
 
   <!-- Step 1: System + GPU -->
   <div class="wiz-step" id="wz-1">
     <h2>System Settings</h2>
-    <p>User permissions, timezone, and GPU transcoding support.</p>
+    <p>User permissions, timezone, and GPU transcoding support — all auto-detected.</p>
     <div class="step-form-grid">
       <div class="field"><label>PUID <span class="hint">User ID — use 1000 on Windows</span></label><input id="w-PUID" type="number" value="1000"></div>
       <div class="field"><label>PGID <span class="hint">Group ID — use 1000 on Windows</span></label><input id="w-PGID" type="number" value="1000"></div>
-      <div class="field full"><label>Timezone <span class="hint">e.g. America/Edmonton · America/New_York · Europe/London</span></label><input id="w-TZ" type="text" placeholder="America/Edmonton"></div>
+      <div class="field full"><label>Timezone</label><input id="w-TZ" type="text" placeholder="America/Edmonton"></div>
     </div>
     <div class="sect-title">Hardware Transcoding</div>
     <div class="gpu-grid">
-      <div class="gpu-opt sel" id="gpu-none"   onclick="selectGpu('none')">
-        <span class="gi">💻</span><strong>None</strong><span>CPU / software</span>
-      </div>
-      <div class="gpu-opt" id="gpu-nvidia" onclick="selectGpu('nvidia')">
-        <span class="gi">🎮</span><strong>NVIDIA</strong><span>NVENC / NVDEC</span>
-      </div>
+      <div class="gpu-opt sel" id="gpu-none" onclick="selectGpu('none')"><span class="gi">💻</span><strong>None</strong><span>CPU / software</span></div>
+      <div class="gpu-opt" id="gpu-nvidia" onclick="selectGpu('nvidia')"><span class="gi">🎮</span><strong>NVIDIA</strong><span>NVENC / NVDEC</span></div>
     </div>
     <div class="gpu-note" id="gpu-nvidia-note" style="margin-top:12px">
-      <strong>NVIDIA on Windows Docker Desktop:</strong> No extra setup needed — just make sure your NVIDIA drivers are up to date. Docker Desktop uses your GPU automatically via WSL2.<br><br>
-      <strong>NVIDIA on Linux:</strong> Install <code>nvidia-container-toolkit</code> first. See NVIDIA's docs for your distro.
+      <strong>Windows Docker Desktop:</strong> No extra setup — just up-to-date NVIDIA drivers. GPU access via WSL2 is automatic.<br><br>
+      <strong>Linux:</strong> Install <code>nvidia-container-toolkit</code> first.
     </div>
   </div>
 
   <!-- Step 2: Paths -->
   <div class="wiz-step" id="wz-2">
     <h2>Folder Paths</h2>
-    <p>Where your container settings and media files live. These paths are auto-filled for your OS — adjust if needed.</p>
-    <div class="field" style="margin-bottom:16px">
-      <label>Config Storage Path <span class="hint">Container databases &amp; settings — not media files</span></label>
-      <div style="display:flex;gap:8px">
-        <input id="w-BASE_PATH" type="text" style="flex:1">
-        <button class="btn-browse" onclick="openBrowser('w-BASE_PATH')">📁 Browse</button>
-      </div>
+    <p>Where container settings and media files live. These are auto-filled for your system — adjust only if needed.</p>
+    <div class="info-box" style="margin-bottom:16px;background:rgba(245,158,11,.07);border-color:rgba(245,158,11,.3)">
+      ⚠ <strong>Tip:</strong> If you are not sure, use the default paths. Only change these if you know what you are doing and have the folder structure set up correctly.
     </div>
-    <div class="field">
-      <label>Media Root Path <span class="hint">Your Videos folder — where movies and TV will be stored</span></label>
-      <div style="display:flex;gap:8px">
-        <input id="w-MEDIA_SHARE" type="text" oninput="updateFolderCmd()" style="flex:1">
-        <button class="btn-browse" onclick="openBrowser('w-MEDIA_SHARE', true)">📁 Browse</button>
-      </div>
+    <div class="field" style="margin-bottom:16px">
+      <label>Config Storage Path <span class="hint">Container databases and settings — not media files</span></label>
+      <div style="display:flex;gap:8px"><input id="w-BASE_PATH" type="text" style="flex:1"><button class="btn-browse" onclick="openBrowser('w-BASE_PATH')">📁 Browse</button></div>
+    </div>
+    <div class="field" style="margin-bottom:20px">
+      <label>Media Root Path <span class="hint">Your Videos folder</span></label>
+      <div style="display:flex;gap:8px"><input id="w-MEDIA_SHARE" type="text" oninput="updateFolderCmd()" style="flex:1"><button class="btn-browse" onclick="openBrowser('w-MEDIA_SHARE',true)">📁 Browse</button></div>
     </div>
     <div class="sect-title">Create Required Subfolders</div>
-    <p style="font-size:12px;color:var(--muted);margin-bottom:8px">Run this once in PowerShell to create the folder structure Radarr and Sonarr expect:</p>
-    <div class="cmd-box" id="folder-cmd"><button class="cmd-copy" onclick="copyCmd()">Copy</button></div>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:8px">Run this command in PowerShell to create the folder structure Radarr and Sonarr expect:</p>
+    <div class="cmd-box" id="folder-cmd"></div>
+    <div style="margin-top:14px;background:var(--surf2);border:1px solid var(--border);border-radius:8px;padding:14px 16px;font-size:12px;line-height:1.8">
+      <strong>How to open PowerShell on Windows 10 / 11:</strong><br>
+      1. Press the <strong>Windows key</strong> and type <strong>PowerShell</strong><br>
+      2. Right-click <strong>Windows PowerShell</strong> → <strong>Run as Administrator</strong><br>
+      3. Paste the command above and press <strong>Enter</strong>
+    </div>
   </div>
 
   <!-- Step 3: VPN -->
   <div class="wiz-step" id="wz-3">
     <h2>VPN — qBittorrent</h2>
-    <p>Route download traffic through a VPN for privacy, or run without one if you're downloading on a private home network.</p>
-
+    <p>Route download traffic through a VPN, or run without one on a private home network.</p>
     <input type="hidden" id="w-VPN_ENABLED" value="yes">
     <div class="tog-row">
-      <div>
-        <div>Enable VPN for qBittorrent</div>
-        <div class="tog-sub">Disable if you're on a private network and don't need VPN protection</div>
-      </div>
+      <div><div>Enable VPN for qBittorrent</div><div class="tog-sub">Disable if on a private network with no need for VPN</div></div>
       <div class="tog-grp">
         <button class="tog-btn active" id="vpn-yes" onclick="setVpnEnabled(true)">Enabled</button>
         <button class="tog-btn" id="vpn-no" onclick="setVpnEnabled(false)">Disabled</button>
       </div>
     </div>
-
     <div id="vpn-creds">
       <div class="step-form-grid">
         <div class="field"><label>VPN Username</label><input id="w-VPN_USER" type="text" placeholder="p1234567"></div>
@@ -504,123 +505,95 @@ a.ext:hover{text-decoration:underline}
             <option value="openvpn">OpenVPN</option>
           </select>
         </div>
-        <div class="field full"><label>LAN Network <span class="hint">Your home subnet — lets LAN devices reach the qBittorrent WebUI</span></label><input id="w-LAN_NETWORK" type="text" placeholder="192.168.1.0/24"></div>
+        <div class="field full"><label>LAN Network <span class="hint">Your home subnet</span></label><input id="w-LAN_NETWORK" type="text" placeholder="192.168.1.0/24"></div>
       </div>
     </div>
   </div>
 
-  <!-- Step 4: Services & API Keys -->
+  <!-- Step 4: Phase 1 Deploy (all except Plex) -->
   <div class="wiz-step" id="wz-4">
-    <h2>Services &amp; API Keys</h2>
-    <p>These can be filled in now <strong>or after your first deploy</strong> — services need to be running before you can grab their keys. Click the links below to open each service once deployed.</p>
-
-    <div class="info-box" style="margin-bottom:18px">
-      💡 <strong>First time?</strong> Skip this step, click Deploy on the next screen, then come back here via <strong>Settings</strong> once everything is running.
+    <h2>Starting Your Services</h2>
+    <p>Deploying Radarr, Sonarr, Prowlarr, qBittorrent, and supporting services — <strong>not Plex yet</strong>. This lets you grab API keys in the next step.</p>
+    <div class="deploy-wrap">
+      <div class="deploy-title" id="p1-title">Ready to start services</div>
+      <div class="deploy-sub" id="p1-sub">Click Next to begin deployment</div>
+      <div class="prog-track"><div class="prog-fill" id="p1-bar" style="width:0%"></div></div>
+      <div class="prog-label" id="p1-pct">0%</div>
+      <div class="deploy-status" id="p1-status"></div>
     </div>
+  </div>
 
+  <!-- Step 5: API Keys -->
+  <div class="wiz-step" id="wz-5">
+    <h2>Services &amp; API Keys</h2>
+    <p>Your services are running. Click the links below to open each one and grab its API key.</p>
+    <div class="info-box" style="margin-bottom:18px">
+      💡 All fields here are optional for the initial deploy — you can skip and fill them in later via <strong>Settings</strong>.
+    </div>
     <div class="sect-title">Server</div>
     <div class="step-form-grid" style="margin-bottom:18px">
-      <div class="field full">
-        <label>Your Server's Local IP <span class="hint">Shown on the dashboard — other devices use this to reach Plex</span></label>
-        <input id="w-SERVER_IP" type="text" placeholder="192.168.1.100">
-      </div>
+      <div class="field full"><label>Server Local IP</label><input id="w-SERVER_IP" type="text" placeholder="192.168.1.100"></div>
     </div>
-
-    <div class="sect-title">
-      Plex
-      <a class="ext" href="http://localhost:32400/web" target="_blank" style="margin-left:10px">Open Plex ↗</a>
-    </div>
+    <div class="sect-title">Plex <a class="ext" href="http://localhost:32400/web" target="_blank" style="margin-left:10px">Open Plex ↗</a></div>
     <div class="step-form-grid" style="margin-bottom:4px">
-      <div class="field">
-        <label>Plex URL</label>
-        <input id="w-PLEX_URL" type="text" placeholder="http://192.168.1.100:32400">
-      </div>
-      <div class="field">
-        <label>
-          Plex Token
-          <a class="ext" href="https://support.plex.tv/articles/204059436" target="_blank">How to find it ↗</a>
-        </label>
-        <input id="w-PLEX_TOKEN" type="text" placeholder="xxxxxxxxxxxxxxxxxxxx">
-      </div>
+      <div class="field"><label>Plex URL</label><input id="w-PLEX_URL" type="text" placeholder="http://192.168.1.100:32400"></div>
+      <div class="field"><label>Plex Token <a class="ext" href="https://support.plex.tv/articles/204059436" target="_blank">How to find ↗</a></label><input id="w-PLEX_TOKEN" type="text"></div>
     </div>
-    <div class="field-note" style="margin-bottom:18px">In Plex: Sign in → click your avatar → Account → scroll to bottom of XML page → find <code>X-Plex-Token</code></div>
-
-    <div class="sect-title">
-      Sonarr — TV Automation
-      <a class="ext" href="http://localhost:8989" target="_blank" style="margin-left:10px">Open Sonarr ↗</a>
-    </div>
+    <div class="field-note" style="margin-bottom:18px">Plex → avatar → Account → scroll to XML → find <code>X-Plex-Token</code></div>
+    <div class="sect-title">Sonarr — TV <a class="ext" href="http://localhost:8989" target="_blank" style="margin-left:10px">Open Sonarr ↗</a></div>
     <div class="step-form-grid" style="margin-bottom:18px">
-      <div class="field full">
-        <label>Sonarr API Key</label>
-        <input id="w-SONARR_KEY" type="text" placeholder="paste key here">
-        <div class="field-note">Sonarr → Settings → General → copy the API Key at the top</div>
-      </div>
+      <div class="field full"><label>Sonarr API Key</label><input id="w-SONARR_KEY" type="text" placeholder="paste key here"><div class="field-note">Sonarr → Settings → General → API Key</div></div>
     </div>
-
-    <div class="sect-title">
-      Radarr — Movie Automation
-      <a class="ext" href="http://localhost:7878" target="_blank" style="margin-left:10px">Open Radarr ↗</a>
-    </div>
+    <div class="sect-title">Radarr — Movies <a class="ext" href="http://localhost:7878" target="_blank" style="margin-left:10px">Open Radarr ↗</a></div>
     <div class="step-form-grid" style="margin-bottom:18px">
-      <div class="field full">
-        <label>Radarr API Key</label>
-        <input id="w-RADARR_KEY" type="text" placeholder="paste key here">
-        <div class="field-note">Radarr → Settings → General → copy the API Key at the top</div>
-      </div>
+      <div class="field full"><label>Radarr API Key</label><input id="w-RADARR_KEY" type="text" placeholder="paste key here"><div class="field-note">Radarr → Settings → General → API Key</div></div>
     </div>
-
-    <div class="sect-title">Prefetcharr — Auto-Download Next Episodes</div>
-    <div class="info-box">
-      🤖 Prefetcharr uses your <strong>Plex Token</strong> and <strong>Sonarr API Key</strong> above — no separate setup needed. The config file is written automatically when you click Next. After deploy, restart the Prefetcharr container from the dashboard if you filled in the keys.
-    </div>
+    <div class="sect-title">Prefetcharr — Auto next-episode</div>
+    <div class="info-box">🤖 Prefetcharr uses your <strong>Plex Token</strong> and <strong>Sonarr API Key</strong> above. Config is written automatically when you click Next.</div>
   </div>
 
-  <!-- Step 5: Plex Claim Token (LAST before deploy — expires in 4 min) -->
-  <div class="wiz-step" id="wz-5">
+  <!-- Step 6: Plex Claim Token -->
+  <div class="wiz-step" id="wz-6">
     <h2>Plex Claim Token</h2>
-    <p>This token links your Plex server to your account on first launch. <strong>It expires 4 minutes after you generate it</strong> — get it right before clicking Deploy.</p>
-
+    <p>This links your Plex server to your account on first launch. <strong>It expires 4 minutes after you generate it</strong> — get it right before clicking Deploy.</p>
     <div style="background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.4);border-radius:8px;padding:16px 18px;margin-bottom:20px">
       <div style="font-size:13px;font-weight:600;color:var(--yellow);margin-bottom:10px">⚠ Time-sensitive — do this step last</div>
       <ol style="font-size:13px;color:var(--text);line-height:2;padding-left:18px">
         <li>Click <a class="ext" href="https://www.plex.tv/claim" target="_blank" style="font-size:13px">plex.tv/claim ↗</a> — sign in if needed</li>
         <li>Copy the token shown on that page</li>
-        <li>Paste it below, then immediately click <strong>Deploy</strong></li>
+        <li>Paste it below, then immediately click <strong>Deploy Plex</strong></li>
       </ol>
     </div>
-
     <div class="field">
-      <label>
-        Plex Claim Token
-        <a class="ext" href="https://www.plex.tv/claim" target="_blank">Get token ↗</a>
-        <span id="claim-timer" class="claim-timer">4:00</span>
-      </label>
+      <label>Plex Claim Token <a class="ext" href="https://www.plex.tv/claim" target="_blank">Get token ↗</a> <span id="claim-timer" class="claim-timer">4:00</span></label>
       <input id="w-PLEX_CLAIM" type="text" placeholder="claim-xxxxxxxxxxxxxxxxxxxx" oninput="onClaimInput()" style="font-family:monospace;font-size:13px">
     </div>
-    <div class="field-note" style="margin-top:8px">If the timer hits 0:00 before you deploy, just go back to plex.tv/claim and get a fresh token — takes 5 seconds.</div>
+    <div class="field-note" style="margin-top:8px">If the timer hits 0:00 before you deploy, go back to plex.tv/claim and get a fresh one — takes 5 seconds.</div>
   </div>
 
-  <!-- Step 6: Deploy -->
-  <div class="wiz-step" id="wz-6">
-    <h2>Ready to Launch!</h2>
-    <p>Everything is configured. Click <strong>Deploy</strong> to pull and start all containers. First launch takes a few minutes while images download.</p>
-    <div class="info-box" id="deploy-summary"></div>
-    <div class="log-panel" id="wiz-log-panel" style="margin-top:16px">
-      <div class="log-head">Deploy Output</div>
-      <div id="wiz-log-out"></div>
-      <div id="wiz-log-foot"></div>
-      <div id="wiz-svc-links" style="display:none">
-        <div class="svc-grid">
-          <a class="svc-link" href="http://localhost:32400/web" target="_blank">Plex<span>:32400</span></a>
-          <a class="svc-link" href="http://localhost:7878"      target="_blank">Radarr<span>:7878</span></a>
-          <a class="svc-link" href="http://localhost:8989"      target="_blank">Sonarr<span>:8989</span></a>
-          <a class="svc-link" href="http://localhost:9696"      target="_blank">Prowlarr<span>:9696</span></a>
-          <a class="svc-link" href="http://localhost:5055"      target="_blank">Seerr<span>:5055</span></a>
-          <a class="svc-link" href="http://localhost:8080"      target="_blank">qBittorrent<span>:8080</span></a>
-          <a class="svc-link" href="http://localhost:8181"      target="_blank">Tautulli<span>:8181</span></a>
-          <a class="svc-link" href="http://localhost:7474"      target="_blank">Autobrr<span>:7474</span></a>
-          <a class="svc-link" href="http://localhost:5690"      target="_blank">Wizarr<span>:5690</span></a>
-        </div>
+  <!-- Step 7: Phase 2 Deploy (Plex) -->
+  <div class="wiz-step" id="wz-7">
+    <h2>Starting Plex</h2>
+    <p>Deploying Plex with your claim token. This is the final step — you will be taken to the dashboard when done.</p>
+    <div class="deploy-wrap">
+      <div class="deploy-title" id="p2-title">Ready to start Plex</div>
+      <div class="deploy-sub" id="p2-sub">Click Deploy Plex to begin</div>
+      <div class="prog-track"><div class="prog-fill" id="p2-bar" style="width:0%"></div></div>
+      <div class="prog-label" id="p2-pct">0%</div>
+      <div class="deploy-status" id="p2-status"></div>
+    </div>
+    <div id="wiz-svc-links" style="display:none;margin-top:16px">
+      <div class="services-label">✓ Your stack is fully running — open a service:</div>
+      <div class="services-grid">
+        <a class="svc-link" href="http://localhost:32400/web" target="_blank">Plex<span>:32400</span></a>
+        <a class="svc-link" href="http://localhost:7878" target="_blank">Radarr<span>:7878</span></a>
+        <a class="svc-link" href="http://localhost:8989" target="_blank">Sonarr<span>:8989</span></a>
+        <a class="svc-link" href="http://localhost:9696" target="_blank">Prowlarr<span>:9696</span></a>
+        <a class="svc-link" href="http://localhost:5055" target="_blank">Seerr<span>:5055</span></a>
+        <a class="svc-link" href="http://localhost:8080" target="_blank">qBittorrent<span>:8080</span></a>
+        <a class="svc-link" href="http://localhost:8181" target="_blank">Tautulli<span>:8181</span></a>
+        <a class="svc-link" href="http://localhost:7474" target="_blank">Autobrr<span>:7474</span></a>
+        <a class="svc-link" href="http://localhost:5690" target="_blank">Wizarr<span>:5690</span></a>
       </div>
     </div>
   </div>
@@ -631,7 +604,8 @@ a.ext:hover{text-decoration:underline}
     <span class="wiz-step-label" id="wiz-label">Step 1 of 6</span>
     <div class="spacer"></div>
     <button class="btn-primary" id="wiz-next"   onclick="wizStep(1)">Next →</button>
-    <button class="btn-primary" id="wiz-deploy" onclick="wizDeploy()" style="display:none">🚀 Deploy</button>
+    <button class="btn-primary" id="wiz-deploy-p1" onclick="wizDeployPhase1()" style="display:none">🚀 Start Services</button>
+    <button class="btn-primary" id="wiz-deploy-p2" onclick="wizDeployPhase2()" style="display:none">🚀 Deploy Plex</button>
   </div>
 
 </div>
@@ -678,7 +652,7 @@ const DESCS = {
 };
 const WFIELDS = ['PUID','PGID','TZ','BASE_PATH','MEDIA_SHARE','PLEX_CLAIM','PLEX_URL','PLEX_TOKEN','VPN_ENABLED','VPN_USER','VPN_PASS','VPN_PROV','VPN_CLIENT','LAN_NETWORK','SERVER_IP','SONARR_KEY','RADARR_KEY'];
 const SFIELDS = WFIELDS.map(k => 's-' + k).concat(['s-GPU_PROVIDER']);
-const TOTAL_STEPS = 7;
+const TOTAL_STEPS = 8;
 
 // ── State ────────────────────────────────────────────────────────────────────
 let wizCurrentStep = 0;
@@ -871,13 +845,16 @@ function showWizStep(n) {
   document.querySelectorAll('.wiz-step').forEach(s => s.classList.remove('active'));
   document.getElementById('wz-' + n).classList.add('active');
   document.getElementById('wiz-label').textContent = `Step ${n + 1} of ${TOTAL_STEPS}`;
-  document.getElementById('wiz-back').style.display   = n === 0 ? 'none' : '';
-  document.getElementById('wiz-next').style.display   = n === TOTAL_STEPS - 1 ? 'none' : '';
-  document.getElementById('wiz-deploy').style.display = n === TOTAL_STEPS - 1 ? '' : 'none';
+  document.getElementById('wiz-back').style.display      = n === 0 ? 'none' : '';
+  // Next shown on steps that aren't auto-deploy steps (4 and 7) and not last
+  const isAutoStep = (n === 4 || n === TOTAL_STEPS - 1);
+  document.getElementById('wiz-next').style.display      = (!isAutoStep) ? '' : 'none';
+  document.getElementById('wiz-deploy-p1').style.display = n === 4 ? '' : 'none';
+  document.getElementById('wiz-deploy-p2').style.display = n === TOTAL_STEPS - 1 ? '' : 'none';
   buildProgress();
-  if (n === 5) startClaimTimer(); else stopClaimTimer();
-  if (n === TOTAL_STEPS - 1) buildDeploySummary();
+  if (n === 6) startClaimTimer(); else stopClaimTimer();
   if (n === 2) updateFolderCmd();
+  if (n === 0) loadWizardIps();
 }
 
 async function wizStep(dir) {
@@ -909,41 +886,110 @@ async function saveWizardValues() {
   await fetch('/api/save', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(getWizardValues()) });
 }
 
-async function wizDeploy() {
-  await saveWizardValues();
-  const panel = document.getElementById('wiz-log-panel');
-  const logEl = document.getElementById('wiz-log-out');
-  const foot  = document.getElementById('wiz-log-foot');
-  const svcs  = document.getElementById('wiz-svc-links');
-  panel.classList.add('open');
-  logEl.textContent = '';
-  foot.textContent  = '';
-  svcs.style.display = 'none';
-  document.getElementById('wiz-deploy').disabled = true;
+function runProgressDeploy(action, total, titleEl, subEl, barEl, pctEl, statusEl) {
+  return new Promise((resolve) => {
+    let started = 0;
+    titleEl.textContent = 'Starting…';
+    subEl.textContent   = `0 of ${total} services started`;
 
-  const es = new EventSource('/api/stream/compose?action=deploy');
-  es.addEventListener('log', e => {
-    logEl.textContent += JSON.parse(e.data).line + '\n';
-    logEl.scrollTop = logEl.scrollHeight;
+    const es = new EventSource(`/api/stream/compose?action=${action}`);
+
+    es.addEventListener('log', e => {
+      const { line } = JSON.parse(e.data);
+      if (line.toLowerCase().includes('started') || line.toLowerCase().includes('running')) {
+        started = Math.min(started + 1, total);
+        const pct = Math.round((started / total) * 95);
+        barEl.style.width   = pct + '%';
+        pctEl.textContent   = pct + '%';
+        subEl.textContent   = `${started} of ${total} services started`;
+        // Extract container name for status
+        const m = line.match(/Container (\S+)/i);
+        if (m) titleEl.textContent = `Starting ${m[1]}…`;
+      }
+    });
+
+    es.addEventListener('done', e => {
+      es.close();
+      const { code } = JSON.parse(e.data);
+      barEl.style.width = '100%';
+      pctEl.textContent = '100%';
+      resolve(code);
+    });
+
+    es.onerror = () => {
+      es.close();
+      // For phase1 (no plex-control restart), this shouldn't happen.
+      // Assume success and continue.
+      barEl.style.width = '100%';
+      pctEl.textContent = '100%';
+      resolve(0);
+    };
   });
-  es.addEventListener('done', e => {
-    es.close();
-    document.getElementById('wiz-deploy').disabled = false;
-    const { code } = JSON.parse(e.data);
-    if (code === 0) {
-      foot.innerHTML = '<span style="color:var(--green)">✓ Stack is running!</span>';
-      svcs.style.display = 'block';
-      setTimeout(() => nav('dashboard'), 3000);
-    } else {
-      foot.innerHTML = `<span style="color:var(--red)">✗ Deploy failed (exit ${code}) — check the log above</span>`;
-    }
-  });
-  es.onerror = () => {
-    es.close();
-    // plex-control was recreated mid-deploy — normal. Poll until it's back.
-    foot.innerHTML = '<span style="color:var(--yellow)">⟳ Stack restarting — reconnecting automatically…</span>';
-    wizWaitReconnect(foot, svcs);
-  };
+}
+
+async function wizDeployPhase1() {
+  await saveWizardValues();
+  document.getElementById('wiz-deploy-p1').disabled = true;
+  document.getElementById('wiz-back').disabled = true;
+
+  const code = await runProgressDeploy(
+    'phase1', 9,
+    document.getElementById('p1-title'),
+    document.getElementById('p1-sub'),
+    document.getElementById('p1-bar'),
+    document.getElementById('p1-pct'),
+    document.getElementById('p1-status'),
+  );
+
+  document.getElementById('wiz-deploy-p1').disabled = false;
+  document.getElementById('wiz-back').disabled = false;
+
+  if (code === 0) {
+    document.getElementById('p1-status').textContent = '✓ Services started — continue to grab your API keys';
+    document.getElementById('p1-status').className   = 'deploy-status ok';
+    // Auto-advance after 2 seconds
+    setTimeout(() => { wizCurrentStep = 5; showWizStep(5); }, 2000);
+  } else {
+    document.getElementById('p1-status').textContent = '✗ Deploy failed — check Docker Desktop and try again';
+    document.getElementById('p1-status').className   = 'deploy-status err';
+  }
+}
+
+async function wizDeployPhase2() {
+  await saveWizardValues();
+  document.getElementById('wiz-deploy-p2').disabled = true;
+  document.getElementById('wiz-back').disabled = true;
+
+  const code = await runProgressDeploy(
+    'phase2', 1,
+    document.getElementById('p2-title'),
+    document.getElementById('p2-sub'),
+    document.getElementById('p2-bar'),
+    document.getElementById('p2-pct'),
+    document.getElementById('p2-status'),
+  );
+
+  document.getElementById('wiz-deploy-p2').disabled = false;
+
+  if (code === 0) {
+    // Mark setup complete
+    const cfg = Object.fromEntries(WFIELDS.map(k => [k, document.getElementById('w-'+k)?.value || '']));
+    cfg.SETUP_COMPLETE = 'yes';
+    await fetch('/api/save', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(cfg) });
+
+    document.getElementById('p2-status').textContent = '✓ Plex is running! Taking you to the dashboard…';
+    document.getElementById('p2-status').className   = 'deploy-status ok';
+    document.getElementById('wiz-svc-links').style.display = 'block';
+
+    // Unlock dashboard/settings and redirect
+    document.getElementById('tab-dashboard').disabled = false;
+    document.getElementById('tab-settings').disabled  = false;
+    setTimeout(() => { startStatusStream(); loadSystem(); nav('dashboard'); }, 4000);
+  } else {
+    document.getElementById('p2-status').textContent = '✗ Plex deploy failed — check your claim token and try again';
+    document.getElementById('p2-status').className   = 'deploy-status err';
+    document.getElementById('wiz-back').disabled = false;
+  }
 }
 
 function buildDeploySummary() {
@@ -1180,9 +1226,15 @@ async function init() {
     // Update sys bar
     loadSystem(sysRes);
 
-    // First-run detection: show wizard if paths not configured yet
+    // Force wizard if not fully set up
+    const setupDone = cfgRes.SETUP_COMPLETE === 'yes';
     const configured = cfgRes.BASE_PATH && cfgRes.MEDIA_SHARE;
-    if (!configured) nav('wizard');
+    if (!configured || !setupDone) {
+      // Disable tabs until wizard complete
+      document.getElementById('tab-dashboard').disabled = true;
+      document.getElementById('tab-settings').disabled  = true;
+      nav('wizard');
+    }
   } catch (e) {
     console.error('Init error:', e);
     loadSystem();
