@@ -525,50 +525,78 @@ a.ext:hover{text-decoration:underline}
 
   <!-- Step 5: API Keys -->
   <div class="wiz-step" id="wz-5">
-    <h2>Services &amp; API Keys</h2>
-    <p>Your services are running. Click the links below to open each one and grab its API key.</p>
-    <div class="info-box" style="margin-bottom:18px">
-      💡 All fields here are optional for the initial deploy — you can skip and fill them in later via <strong>Settings</strong>.
+    <h2>Connect Your Services</h2>
+    <p>Your download services are now running. Open each one below and paste its API key — this connects everything together.</p>
+
+    <div class="info-box" style="margin-bottom:20px">
+      💡 You can skip any field and fill it in later via <strong>Settings</strong>. Plex token and URL are set up <strong>after Plex is deployed</strong> in the next steps.
     </div>
+
+    <div class="sect-title">
+      Sonarr — TV Show Automation
+      <a class="ext" href="http://localhost:8989" target="_blank" style="margin-left:10px">Open Sonarr ↗</a>
+    </div>
+    <div class="step-form-grid" style="margin-bottom:6px">
+      <div class="field full">
+        <label>Sonarr API Key</label>
+        <input id="w-SONARR_KEY" type="text" placeholder="paste key here">
+      </div>
+    </div>
+    <div style="background:var(--surf2);border-radius:7px;padding:12px 14px;font-size:12px;line-height:1.8;margin-bottom:20px">
+      In Sonarr: <strong>Settings → General</strong> → copy the <strong>API Key</strong> at the top of the page
+    </div>
+
+    <div class="sect-title">
+      Radarr — Movie Automation
+      <a class="ext" href="http://localhost:7878" target="_blank" style="margin-left:10px">Open Radarr ↗</a>
+    </div>
+    <div class="step-form-grid" style="margin-bottom:6px">
+      <div class="field full">
+        <label>Radarr API Key</label>
+        <input id="w-RADARR_KEY" type="text" placeholder="paste key here">
+      </div>
+    </div>
+    <div style="background:var(--surf2);border-radius:7px;padding:12px 14px;font-size:12px;line-height:1.8;margin-bottom:20px">
+      In Radarr: <strong>Settings → General</strong> → copy the <strong>API Key</strong> at the top of the page
+    </div>
+
     <div class="sect-title">Server</div>
-    <div class="step-form-grid" style="margin-bottom:18px">
-      <div class="field full"><label>Server Local IP</label><input id="w-SERVER_IP" type="text" placeholder="192.168.1.100"></div>
+    <div class="step-form-grid">
+      <div class="field full">
+        <label>Your Server Local IP <span class="hint">Used by other devices to reach Plex on your network</span></label>
+        <input id="w-SERVER_IP" type="text" placeholder="192.168.1.100">
+      </div>
     </div>
-    <div class="sect-title">Plex <a class="ext" href="http://localhost:32400/web" target="_blank" style="margin-left:10px">Open Plex ↗</a></div>
-    <div class="step-form-grid" style="margin-bottom:4px">
-      <div class="field"><label>Plex URL</label><input id="w-PLEX_URL" type="text" placeholder="http://192.168.1.100:32400"></div>
-      <div class="field"><label>Plex Token <a class="ext" href="https://support.plex.tv/articles/204059436" target="_blank">How to find ↗</a></label><input id="w-PLEX_TOKEN" type="text"></div>
-    </div>
-    <div class="field-note" style="margin-bottom:18px">Plex → avatar → Account → scroll to XML → find <code>X-Plex-Token</code></div>
-    <div class="sect-title">Sonarr — TV <a class="ext" href="http://localhost:8989" target="_blank" style="margin-left:10px">Open Sonarr ↗</a></div>
-    <div class="step-form-grid" style="margin-bottom:18px">
-      <div class="field full"><label>Sonarr API Key</label><input id="w-SONARR_KEY" type="text" placeholder="paste key here"><div class="field-note">Sonarr → Settings → General → API Key</div></div>
-    </div>
-    <div class="sect-title">Radarr — Movies <a class="ext" href="http://localhost:7878" target="_blank" style="margin-left:10px">Open Radarr ↗</a></div>
-    <div class="step-form-grid" style="margin-bottom:18px">
-      <div class="field full"><label>Radarr API Key</label><input id="w-RADARR_KEY" type="text" placeholder="paste key here"><div class="field-note">Radarr → Settings → General → API Key</div></div>
-    </div>
-    <div class="sect-title">Prefetcharr — Auto next-episode</div>
-    <div class="info-box">🤖 Prefetcharr uses your <strong>Plex Token</strong> and <strong>Sonarr API Key</strong> above. Config is written automatically when you click Next.</div>
   </div>
 
   <!-- Step 6: Plex Claim Token -->
   <div class="wiz-step" id="wz-6">
     <h2>Plex Claim Token</h2>
-    <p>This links your Plex server to your account on first launch. <strong>It expires 4 minutes after you generate it</strong> — get it right before clicking Deploy.</p>
+
+    <div class="info-box" style="margin-bottom:16px">
+      <strong>Two different Plex tokens — here is the difference:</strong><br><br>
+      🔑 <strong>Claim Token</strong> (this step) — a one-time code from plex.tv/claim used to link your new Plex server to your Plex account on first launch. <strong>Expires in 4 minutes.</strong><br><br>
+      🔐 <strong>Plex Token</strong> (added later in Settings) — a permanent token for API access used by Prefetcharr. You get this after Plex is running, from Settings in the control panel.
+    </div>
+
     <div style="background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.4);border-radius:8px;padding:16px 18px;margin-bottom:20px">
-      <div style="font-size:13px;font-weight:600;color:var(--yellow);margin-bottom:10px">⚠ Time-sensitive — do this step last</div>
-      <ol style="font-size:13px;color:var(--text);line-height:2;padding-left:18px">
-        <li>Click <a class="ext" href="https://www.plex.tv/claim" target="_blank" style="font-size:13px">plex.tv/claim ↗</a> — sign in if needed</li>
-        <li>Copy the token shown on that page</li>
+      <div style="font-size:13px;font-weight:600;color:var(--yellow);margin-bottom:10px">Get this right before clicking Deploy Plex — it expires in 4 minutes</div>
+      <ol style="font-size:13px;color:var(--text);line-height:2.2;padding-left:18px">
+        <li>Click <a class="ext" href="https://www.plex.tv/claim" target="_blank" style="font-size:13px">plex.tv/claim</a> — sign in to your Plex account if prompted</li>
+        <li>Copy the claim-xxxxxxxx token shown on that page</li>
         <li>Paste it below, then immediately click <strong>Deploy Plex</strong></li>
       </ol>
     </div>
+
     <div class="field">
-      <label>Plex Claim Token <a class="ext" href="https://www.plex.tv/claim" target="_blank">Get token ↗</a> <span id="claim-timer" class="claim-timer">4:00</span></label>
+      <label>
+        Plex Claim Token
+        <a class="ext" href="https://www.plex.tv/claim" target="_blank">Get token</a>
+        <span id="claim-timer" class="claim-timer">4:00</span>
+      </label>
       <input id="w-PLEX_CLAIM" type="text" placeholder="claim-xxxxxxxxxxxxxxxxxxxx" oninput="onClaimInput()" style="font-family:monospace;font-size:13px">
     </div>
-    <div class="field-note" style="margin-top:8px">If the timer hits 0:00 before you deploy, go back to plex.tv/claim and get a fresh one — takes 5 seconds.</div>
+    <div class="field-note" style="margin-top:8px">If the timer expires, just go back to plex.tv/claim and paste a fresh one — takes 5 seconds.</div>
   </div>
 
   <!-- Step 7: Phase 2 Deploy (Plex) -->
@@ -889,37 +917,72 @@ async function saveWizardValues() {
 function runProgressDeploy(action, total, titleEl, subEl, barEl, pctEl, statusEl) {
   return new Promise((resolve) => {
     let started = 0;
-    titleEl.textContent = 'Starting…';
-    subEl.textContent   = `0 of ${total} services started`;
+    let fakePct  = 3;        // animated fill during image download phase
+    let pulling  = false;
+
+    titleEl.textContent        = 'Preparing…';
+    subEl.textContent          = 'First run downloads images — this can take 3-5 minutes on slow connections';
+    barEl.style.width          = fakePct + '%';
+    barEl.style.transition     = 'width 2s ease';
+    pctEl.textContent          = fakePct + '%';
+    statusEl.textContent       = '';
+    statusEl.className         = 'deploy-status';
+
+    // Slowly animate bar forward during the silent download phase
+    const crawl = setInterval(() => {
+      if (started > 0) { clearInterval(crawl); return; }   // real data taking over
+      if (fakePct < 80) {
+        fakePct += 0.8 + Math.random() * 0.8;
+        barEl.style.width = fakePct + '%';
+        pctEl.textContent = Math.round(fakePct) + '%';
+      }
+    }, 2500);
 
     const es = new EventSource(`/api/stream/compose?action=${action}`);
 
     es.addEventListener('log', e => {
       const { line } = JSON.parse(e.data);
-      if (line.toLowerCase().includes('started') || line.toLowerCase().includes('running')) {
+      if (!line.trim()) return;
+      const lower = line.toLowerCase();
+
+      // Show last meaningful line so user sees activity
+      const clean = line.replace(/^\s+/, '');
+      if (clean.length > 2) statusEl.textContent = clean.length > 65 ? clean.slice(0, 65) + '…' : clean;
+
+      // Phase detection
+      if (lower.includes('pull') || lower.includes('download')) {
+        if (!pulling) { pulling = true; titleEl.textContent = 'Downloading images…'; }
+      } else if (lower.includes('creat') || lower.includes('starting')) {
+        titleEl.textContent = 'Starting services…';
+      }
+
+      // Count actual container starts
+      if (lower.includes('started') || lower.includes(' running')) {
+        clearInterval(crawl);
         started = Math.min(started + 1, total);
-        const pct = Math.round((started / total) * 95);
-        barEl.style.width   = pct + '%';
-        pctEl.textContent   = pct + '%';
-        subEl.textContent   = `${started} of ${total} services started`;
-        // Extract container name for status
-        const m = line.match(/Container (\S+)/i);
-        if (m) titleEl.textContent = `Starting ${m[1]}…`;
+        const realPct = 80 + Math.round((started / total) * 20);
+        barEl.style.transition = 'width 0.5s ease';
+        barEl.style.width      = realPct + '%';
+        pctEl.textContent      = realPct + '%';
+        subEl.textContent      = `${started} of ${total} services started`;
+        const m = line.match(/Container\s+(\S+)/i);
+        if (m) titleEl.textContent = `Started ${m[1]}`;
       }
     });
 
     es.addEventListener('done', e => {
       es.close();
+      clearInterval(crawl);
       const { code } = JSON.parse(e.data);
-      barEl.style.width = '100%';
-      pctEl.textContent = '100%';
+      barEl.style.transition = 'width 0.3s ease';
+      barEl.style.width      = '100%';
+      pctEl.textContent      = '100%';
       resolve(code);
     });
 
     es.onerror = () => {
       es.close();
-      // For phase1 (no plex-control restart), this shouldn't happen.
-      // Assume success and continue.
+      clearInterval(crawl);
       barEl.style.width = '100%';
       pctEl.textContent = '100%';
       resolve(0);
