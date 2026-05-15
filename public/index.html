@@ -427,6 +427,10 @@ a.ext:hover{text-decoration:underline}
     <div class="info-box">
       <strong>What you are setting up:</strong> Plex · Radarr · Sonarr · Prowlarr · qBittorrent · Tautulli · Autobrr · Seerr · Wizarr · Prefetcharr
     </div>
+    <div id="skip-wizard-wrap" style="display:none;margin-top:16px;padding:14px 16px;background:var(--surf2);border:1px solid var(--border);border-radius:8px;font-size:13px">
+      <strong>Already have your stack configured?</strong>
+      <button class="btn-ghost" style="margin-left:12px;padding:5px 14px;font-size:12px" onclick="skipWizard()">Go to Dashboard →</button>
+    </div>
   </div>
 
   <!-- Step 1: System + GPU -->
@@ -1250,6 +1254,19 @@ function wizWaitReconnect(foot, svcs) {
   }, 2000);
 }
 
+// ── Skip wizard (already configured) ─────────────────────────────────────────
+async function skipWizard() {
+  // Mark setup complete and unlock dashboard
+  const cfg = Object.fromEntries(WFIELDS.map(k => [k, document.getElementById('w-'+k)?.value || '']));
+  cfg.SETUP_COMPLETE = 'yes';
+  await fetch('/api/save', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(cfg) });
+  document.getElementById('tab-dashboard').disabled = false;
+  document.getElementById('tab-settings').disabled  = false;
+  startStatusStream();
+  loadSystem();
+  nav('dashboard');
+}
+
 // ── VPN toggle ────────────────────────────────────────────────────────────────
 function setVpnEnabled(on) {
   document.getElementById('w-VPN_ENABLED').value = on ? 'yes' : 'no';
@@ -1311,13 +1328,19 @@ async function init() {
     loadSystem(sysRes);
 
     // Force wizard if not fully set up
-    const setupDone = cfgRes.SETUP_COMPLETE === 'yes';
-    const configured = cfgRes.BASE_PATH && cfgRes.MEDIA_SHARE;
+    const setupDone  = cfgRes.SETUP_COMPLETE === 'yes';
+    const configured = !!(cfgRes.BASE_PATH && cfgRes.MEDIA_SHARE);
     if (!configured || !setupDone) {
       // Disable tabs until wizard complete
       document.getElementById('tab-dashboard').disabled = true;
       document.getElementById('tab-settings').disabled  = true;
       nav('wizard');
+      // Show skip button if paths are already set (re-running wizard by choice or after a glitch)
+      if (configured) document.getElementById('skip-wizard-wrap').style.display = 'block';
+    } else {
+      // Already configured — make sure tabs are enabled
+      document.getElementById('tab-dashboard').disabled = false;
+      document.getElementById('tab-settings').disabled  = false;
     }
   } catch (e) {
     console.error('Init error:', e);
