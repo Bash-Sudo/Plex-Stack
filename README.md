@@ -63,7 +63,7 @@ No Docker, Git, or technical knowledge required — the installer handles everyt
 
 ### Step 1 — Download & Run the Installer
 
-**[⬇ Download Windows_Install.bat](https://raw.githubusercontent.com/Bash-Sudo/Plex-Stack/main/Windows_Install.bat)**
+**[⬇ Download Windows Installer](https://raw.githubusercontent.com/Bash-Sudo/Plex-Stack/main/Windows_Install.bat)
 
 Right-click → **Run as Administrator**
 
