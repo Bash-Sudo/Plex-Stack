@@ -257,7 +257,7 @@ a.ext:hover{text-decoration:underline}
   <!-- Actions -->
   <div class="act-row">
     <button class="btn-primary" onclick="runCompose('update')">⬆ Update All</button>
-    <button class="btn-ghost"   onclick="runCompose('deploy')">↺ Restart Stack</button>
+    <button class="btn-ghost"   onclick="runCompose('restart')">↺ Restart Stack</button>
     <div class="spacer"></div>
     <a href="/api/download/start.bat" class="btn-ghost">⬇ Download start.bat</a>
     <a href="/api/download/start.sh"  class="btn-ghost">⬇ start.sh</a>
@@ -819,7 +819,25 @@ function runCompose(action) {
     if (code === 0) { foot.innerHTML = '<span style="color:var(--green)">✓ Done</span>'; svcs.style.display = 'block'; }
     else              foot.innerHTML = `<span style="color:var(--red)">✗ Failed (exit ${code})</span>`;
   });
-  es.onerror = () => { es.close(); foot.innerHTML = '<span style="color:var(--red)">Connection lost</span>'; };
+  es.onerror = () => {
+    es.close();
+    // Update All may rebuild plex-control — poll until it's back
+    foot.innerHTML = '<span style="color:var(--yellow)">⟳ Control panel restarting — reconnecting…</span>';
+    let attempts = 0;
+    const poll = setInterval(async () => {
+      attempts++;
+      try {
+        const r = await fetch('/api/config', { signal: AbortSignal.timeout(2000) });
+        if (r.ok) {
+          clearInterval(poll);
+          foot.innerHTML = '<span style="color:var(--green)">✓ Done — stack is running</span>';
+          svcs.style.display = 'block';
+          startStatusStream();
+        }
+      } catch {}
+      if (attempts > 60) { clearInterval(poll); foot.innerHTML = '<span style="color:var(--red)">Could not reconnect. Refresh the page.</span>'; }
+    }, 2000);
+  };
 }
 
 // ── Settings ─────────────────────────────────────────────────────────────────

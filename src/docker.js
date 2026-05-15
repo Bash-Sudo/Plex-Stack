@@ -196,12 +196,14 @@ async function getWindowsUsername() {
 // Services in each deploy phase.
 // Phase 1: everything EXCEPT plex — plex-control never restarts, SSE stays alive.
 // Phase 2: plex only (with claim token already in .env).
-const PHASE1 = ['radarr','sonarr','prowlarr','autobrr','seerr','qbit-vpn','tautulli','wizarr','prefetcharr'];
-const PHASE2 = ['plex'];
+const PHASE1       = ['radarr','sonarr','prowlarr','autobrr','seerr','qbit-vpn','tautulli','wizarr','prefetcharr'];
+const PHASE2       = ['plex'];
+// All services except plex-control — used by dashboard Restart/Update so we never kill ourselves.
+const ALL_SERVICES = [...PHASE1, ...PHASE2];
 
 function runPhase(phase, onLine) {
   const services = phase === 1 ? PHASE1 : PHASE2;
   return runCompose(['up', '-d', '--remove-orphans', ...services], onLine);
 }
 
-module.exports = { getFullStatus, restartContainer, runCompose, runPhase, PHASE1, PHASE2, composeArgs, getDockerInfo, getWindowsUsername, getHostAppPath, hostToWin };
+module.exports = { getFullStatus, restartContainer, runCompose, runPhase, PHASE1, PHASE2, ALL_SERVICES, composeArgs, getDockerInfo, getWindowsUsername, getHostAppPath, hostToWin };

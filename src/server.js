@@ -235,14 +235,22 @@ const server = http.createServer(async (req, res) => {
         const code = await docker.runPhase(2, l => send('log', { line: l }));
         return finish(code);
       }
+      // restart: restart all services EXCEPT plex-control so we don't kill ourselves
+      if (action === 'restart') {
+        send('log', { line: 'Restarting services (plex-control stays running)…' });
+        const code = await docker.runCompose(['restart', ...docker.ALL_SERVICES], l => send('log', { line: l }));
+        return finish(code);
+      }
       if (action === 'update') {
         send('log', { line: 'Pulling latest images…' });
-        const pullCode = await docker.runCompose(['pull'], l => send('log', { line: l }));
+        const pullCode = await docker.runCompose(['pull', ...docker.ALL_SERVICES], l => send('log', { line: l }));
         if (pullCode !== 0) return finish(pullCode);
         send('log', { line: '' });
         send('log', { line: 'Recreating containers…' });
+        const upCode = await docker.runCompose(['up', '-d', '--remove-orphans', ...docker.ALL_SERVICES], l => send('log', { line: l }));
+        return finish(upCode);
       }
-      // default: full deploy
+      // default: full deploy (wizard initial setup only)
       const upCode = await docker.runCompose(
         ['up', '-d', '--remove-orphans'],
         l => send('log', { line: l }),
@@ -347,7 +355,26 @@ const server = http.createServer(async (req, res) => {
 
 // ── Start ─────────────────────────────────────────────────────────────────────
 
+function ensurePrefetcharrConfig() {
+  // Docker bind-mounts need a FILE to exist before container start.
+  // If config.toml is missing, Docker creates it as a directory — breaking prefetcharr.
+  // Copy the example on startup to prevent this.
+  const config  = path.join(CWD, 'prefetcharr', 'config.toml');
+  const example = path.join(CWD, 'prefetcharr', 'config.example.toml');
+  try {
+    const stat = fs.existsSync(config) && fs.statSync(config);
+    if (!stat || stat.isDirectory()) {
+      if (stat && stat.isDirectory()) fs.rmdirSync(config);  // remove wrongly-created dir
+      if (fs.existsSync(example)) {
+        fs.copyFileSync(example, config);
+        console.log('  Created prefetcharr/config.toml from example');
+      }
+    }
+  } catch (e) { console.warn('  Could not ensure prefetcharr config:', e.message); }
+}
+
 function start() {
+  ensurePrefetcharrConfig();
   refreshStatus();
   setInterval(refreshStatus, 10_000);
 
