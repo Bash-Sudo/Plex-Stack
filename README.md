@@ -174,6 +174,8 @@ Then add indexers under **Indexers > Add Indexer**. Any indexers you add here au
 
 **Settings > Media Management > Root Folders > Add:** `/data/media/movies`
 
+> Only add `/data/media/movies` here — do not add the downloads folder as a root folder.
+
 **Settings > Download Clients > Add > qBittorrent:**
 
 | Field | Value |
@@ -184,13 +186,29 @@ Then add indexers under **Indexers > Add Indexer**. Any indexers you add here au
 | Username | `admin` |
 | Password | your qBittorrent password |
 
-Radarr will look for completed downloads in `/data/downloads/radarr` and move them to `/data/media/movies`.
+**Settings > Download Clients > Remote Path Mappings > Add:**
+
+| Field | Value |
+|---|---|
+| Host | `qbit-vpn` |
+| Remote Path | `/downloads` |
+| Local Path | `/data/downloads` |
+
+This tells Radarr how to find completed downloads — qBittorrent stores them at `/downloads/radarr` but Radarr accesses the same folder at `/data/downloads/radarr`.
+
+**Settings > Download Clients > Completed Download Handling:**
+- ✅ Enable Completed Download Handling — ON
+- ✅ Remove Completed — ON
+
+Once a download finishes, Radarr automatically moves it from `/data/downloads/radarr` to `/data/media/movies` and triggers a Plex library scan.
 
 ---
 
 ### 4 — Sonarr TV Shows
 
 **Settings > Media Management > Root Folders > Add:** `/data/media/tv`
+
+> Only add `/data/media/tv` here — do not add the downloads folder as a root folder.
 
 **Settings > Download Clients > Add > qBittorrent:**
 
@@ -202,7 +220,19 @@ Radarr will look for completed downloads in `/data/downloads/radarr` and move th
 | Username | `admin` |
 | Password | your qBittorrent password |
 
-Sonarr will look for completed downloads in `/data/downloads/sonarr` and move them to `/data/media/tv`.
+**Settings > Download Clients > Remote Path Mappings > Add:**
+
+| Field | Value |
+|---|---|
+| Host | `qbit-vpn` |
+| Remote Path | `/downloads` |
+| Local Path | `/data/downloads` |
+
+**Settings > Download Clients > Completed Download Handling:**
+- ✅ Enable Completed Download Handling — ON
+- ✅ Remove Completed — ON
+
+Once a download finishes, Sonarr automatically moves it from `/data/downloads/sonarr` to `/data/media/tv`.
 
 ---
 
