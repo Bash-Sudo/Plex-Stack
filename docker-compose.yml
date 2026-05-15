@@ -187,6 +187,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./:/app
+      - C:/:/mnt/windows:ro        # Windows C: drive — read-only, used by folder browser
       - ${MEDIA_SHARE:-/tmp}:/mnt/media:ro
       - ${BASE_PATH:-/tmp}:/mnt/config:ro
     restart: unless-stopped

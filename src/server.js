@@ -283,6 +283,41 @@ const server = http.createServer(async (req, res) => {
     return res.end(sh);
   }
 
+  // Folder browser — lists directories for the path picker
+  // C:/ is mounted read-only at /mnt/windows inside the container
+  if (req.method === 'GET' && pathname === '/api/browse') {
+    const reqPath = (url.searchParams.get('path') || 'C:/').replace(/\\/g, '/');
+    try {
+      const winToHost = (p) => {
+        const m = p.match(/^([A-Za-z]):\/?(.*)$/);
+        if (!m) throw new Error('Only Windows drive paths (C:/, D:/, …) are supported');
+        const drive = m[1].toLowerCase();
+        const rest  = m[2] ? '/' + m[2] : '';
+        // C:/ is mounted at /mnt/windows — other drives not yet supported
+        if (drive === 'c') return `/mnt/windows${rest}`;
+        throw new Error(`Drive ${drive.toUpperCase()}: is not mounted. Add it to docker-compose.yml to browse it.`);
+      };
+
+      const hostPath = winToHost(reqPath);
+      const entries  = fs.readdirSync(hostPath, { withFileTypes: true });
+      const dirs = entries
+        .filter(e => e.isDirectory() && !e.name.startsWith('.'))
+        .map(e => e.name)
+        .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+
+      // Parent path
+      const norm   = reqPath.replace(/\/$/, '');
+      const parts  = norm.split('/');
+      const parent = parts.length > 1
+        ? (parts.slice(0, -1).join('/') || parts[0] + '/')
+        : null;
+
+      return json(res, 200, { path: reqPath, dirs, parent });
+    } catch (e) {
+      return json(res, 500, { error: e.message, path: reqPath });
+    }
+  }
+
   res.writeHead(404);
   res.end('Not found');
 });

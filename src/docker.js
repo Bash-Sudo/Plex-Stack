@@ -1,5 +1,6 @@
 'use strict';
 const http  = require('http');
+const fs    = require('fs');
 const path  = require('path');
 const { spawn } = require('child_process');
 const { parseEnv } = require('./utils');
@@ -133,23 +134,63 @@ async function getDockerInfo() {
   try { return await dockerReq('GET', '/info'); } catch { return {}; }
 }
 
-async function getWindowsUsername() {
-  // Inspect our own mounts — Docker Desktop for Windows maps host paths as
-  // /run/desktop/mnt/host/c/Users/USERNAME/... inside the container.
+function getHostAppPath() {
+  // Read /proc/self/mountinfo to find the real host path bound to /app.
+  // Docker Desktop for Windows maps host paths as:
+  //   /run/desktop/mnt/host/c/Users/USERNAME/...
   try {
-    const filter = encodeURIComponent(JSON.stringify({ name: ['plex-control'] }));
-    const list   = await dockerReq('GET', `/containers/json?filters=${filter}`);
-    const self   = (Array.isArray(list) ? list : []).find(c =>
-      (c.Names || []).some(n => n.replace('/', '') === 'plex-control')
-    );
-    if (!self) return null;
-    const detail = await dockerReq('GET', `/containers/${self.Id}/json`);
-    for (const m of (detail.Mounts || [])) {
-      const match = (m.Source || '').match(/\/Users\/([^/]+)\//i);
-      if (match) return match[1];
+    const lines = fs.readFileSync('/proc/self/mountinfo', 'utf8').split('\n');
+    for (const line of lines) {
+      const parts = line.trim().split(' ');
+      if (parts[4] !== '/app') continue;          // 5th field = mount point
+      const sep = parts.indexOf('-');
+      if (sep !== -1 && parts[sep + 2]) return parts[sep + 2]; // mount source
     }
   } catch {}
   return null;
 }
 
-module.exports = { getFullStatus, restartContainer, runCompose, composeArgs, getDockerInfo, getWindowsUsername };
+function hostToWin(hostPath) {
+  // /run/desktop/mnt/host/c/Users/Jason/... → C:/Users/Jason/...
+  const m = hostPath.match(/^\/run\/desktop\/mnt\/host\/([a-z])(\/.*)?$/i);
+  if (m) return `${m[1].toUpperCase()}:${(m[2] || '/').replace(/\\/g, '/')}`;
+  // /mnt/c/... → C:/...  (WSL direct)
+  const m2 = hostPath.match(/^\/mnt\/([a-z])(\/.*)?$/i);
+  if (m2) return `${m2[1].toUpperCase()}:${(m2[2] || '/').replace(/\\/g, '/')}`;
+  return null;
+}
+
+const SYSTEM_USERS = new Set(['public','default','default user','all users','desktop.ini']);
+
+async function getWindowsUsername() {
+  // Primary: scan /mnt/windows/Users/ (C:/ is mounted read-only into the container)
+  try {
+    const entries = fs.readdirSync('/mnt/windows/Users', { withFileTypes: true });
+    const users = entries
+      .filter(e => e.isDirectory() && !SYSTEM_USERS.has(e.name.toLowerCase()))
+      .map(e => e.name);
+    if (users.length === 1) return users[0];
+    if (users.length > 1) {
+      // Pick most recently modified (most likely the active user)
+      let newest = null, newestTime = 0;
+      for (const u of users) {
+        try {
+          const stat = fs.statSync(`/mnt/windows/Users/${u}`);
+          if (stat.mtimeMs > newestTime) { newestTime = stat.mtimeMs; newest = u; }
+        } catch {}
+      }
+      return newest || users[0];
+    }
+  } catch {}
+
+  // Fallback: parse /app mountinfo for projects inside Users/
+  const hostPath = getHostAppPath();
+  if (hostPath) {
+    const m = hostPath.match(/\/Users\/([^/]+)\//i);
+    if (m) return m[1];
+  }
+
+  return null;
+}
+
+module.exports = { getFullStatus, restartContainer, runCompose, composeArgs, getDockerInfo, getWindowsUsername, getHostAppPath, hostToWin };

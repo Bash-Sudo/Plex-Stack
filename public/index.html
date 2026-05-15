@@ -142,6 +142,20 @@ a.ext:hover{text-decoration:underline}
 .gpu-note{background:rgba(229,160,13,.08);border:1px solid rgba(229,160,13,.3);border-radius:7px;padding:12px 14px;font-size:12px;line-height:1.6;display:none}
 .gpu-note.show{display:block}
 
+/* ── Folder browser modal ── */
+.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:300;display:flex;align-items:center;justify-content:center}
+.modal{background:var(--surf);border:1px solid var(--border);border-radius:12px;width:520px;max-width:95vw;max-height:75vh;display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(0,0,0,.5)}
+.modal-head{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.modal-path{font-size:11px;color:var(--muted);font-family:monospace;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.modal-list{flex:1;overflow-y:auto;padding:6px}
+.dir-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:6px;cursor:pointer;font-size:13px;transition:background .1s}
+.dir-item:hover{background:var(--surf2)}
+.dir-item .di{font-size:16px;flex-shrink:0}
+.modal-foot{padding:12px 18px;border-top:1px solid var(--border);display:flex;gap:10px;align-items:center}
+.modal-foot .cur{font-size:12px;color:var(--muted);flex:1;font-family:monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.btn-browse{background:var(--surf2);border:1px solid var(--border);border-radius:6px;padding:7px 12px;font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;font-family:var(--font);white-space:nowrap;transition:color .15s,border-color .15s}
+.btn-browse:hover{color:var(--text);border-color:var(--text)}
+
 /* ── Toggle buttons ── */
 .tog-row{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 0;border-bottom:1px solid var(--border);margin-bottom:18px}
 .tog-row label{font-size:13px;font-weight:600}
@@ -435,11 +449,17 @@ a.ext:hover{text-decoration:underline}
     <p>Where your container settings and media files live. These paths are auto-filled for your OS — adjust if needed.</p>
     <div class="field" style="margin-bottom:16px">
       <label>Config Storage Path <span class="hint">Container databases &amp; settings — not media files</span></label>
-      <input id="w-BASE_PATH" type="text">
+      <div style="display:flex;gap:8px">
+        <input id="w-BASE_PATH" type="text" style="flex:1">
+        <button class="btn-browse" onclick="openBrowser('w-BASE_PATH')">📁 Browse</button>
+      </div>
     </div>
     <div class="field">
-      <label>Media Root Path <span class="hint">Your Videos / data folder</span></label>
-      <input id="w-MEDIA_SHARE" type="text" oninput="updateFolderCmd()">
+      <label>Media Root Path <span class="hint">Your Videos folder — where movies and TV will be stored</span></label>
+      <div style="display:flex;gap:8px">
+        <input id="w-MEDIA_SHARE" type="text" oninput="updateFolderCmd()" style="flex:1">
+        <button class="btn-browse" onclick="openBrowser('w-MEDIA_SHARE', true)">📁 Browse</button>
+      </div>
     </div>
     <div class="sect-title">Create Required Subfolders</div>
     <p style="font-size:12px;color:var(--muted);margin-bottom:8px">Run this once in PowerShell to create the folder structure Radarr and Sonarr expect:</p>
@@ -616,6 +636,23 @@ a.ext:hover{text-decoration:underline}
 
 </div>
 </div>
+</div>
+
+<!-- ── Folder Browser Modal ───────────────────────────────────────────────── -->
+<div class="modal-backdrop" id="folder-modal" style="display:none" onclick="if(event.target===this)closeBrowser()">
+  <div class="modal">
+    <div class="modal-head">
+      <button class="btn-ghost" style="padding:5px 10px;font-size:12px" onclick="browseUp()">↑ Up</button>
+      <span class="modal-path" id="browse-path"></span>
+      <button onclick="closeBrowser()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:20px;line-height:1;padding:0 2px">✕</button>
+    </div>
+    <div class="modal-list" id="browse-list"></div>
+    <div class="modal-foot">
+      <span class="cur" id="browse-selected"></span>
+      <button class="btn-ghost" onclick="closeBrowser()">Cancel</button>
+      <button class="btn-primary" onclick="confirmBrowse()">Select Folder</button>
+    </div>
+  </div>
 </div>
 
 <!-- ── Script ──────────────────────────────────────────────────────────────── -->
@@ -977,6 +1014,83 @@ function stopClaimTimer() {
 function onClaimInput() {
   // Reset timer when user pastes a new token
   if (document.getElementById('w-PLEX_CLAIM').value.startsWith('claim-')) startClaimTimer();
+}
+
+// ── Folder browser ────────────────────────────────────────────────────────────
+let _browseTarget = null;   // input field ID to populate
+let _browseIsMedia = false; // whether to run updateFolderCmd after
+let _browseCurrent = 'C:/'; // current browsed path
+
+async function openBrowser(targetId, isMedia = false) {
+  _browseTarget  = targetId;
+  _browseIsMedia = isMedia;
+  const start = document.getElementById(targetId)?.value || 'C:/';
+  await loadBrowse(start);
+  document.getElementById('folder-modal').style.display = 'flex';
+}
+
+function closeBrowser() {
+  document.getElementById('folder-modal').style.display = 'none';
+}
+
+async function loadBrowse(path) {
+  _browseCurrent = path;
+  document.getElementById('browse-path').textContent     = path;
+  document.getElementById('browse-selected').textContent = path;
+  document.getElementById('browse-list').innerHTML       = '<div style="padding:20px;text-align:center;color:var(--muted);font-size:13px">Loading…</div>';
+
+  try {
+    const d = await fetch(`/api/browse?path=${encodeURIComponent(path)}`).then(r => r.json());
+    if (d.error) throw new Error(d.error);
+
+    const list = document.getElementById('browse-list');
+    list.innerHTML = '';
+
+    // Up row
+    if (d.parent) {
+      const up = document.createElement('div');
+      up.className = 'dir-item';
+      up.innerHTML = '<span class="di">⬆</span><span style="color:var(--muted)">.. (go up)</span>';
+      up.onclick   = () => loadBrowse(d.parent);
+      list.appendChild(up);
+    }
+
+    if (d.dirs.length === 0) {
+      list.innerHTML += '<div style="padding:14px 12px;font-size:12px;color:var(--muted)">No subfolders here</div>';
+    }
+
+    for (const name of d.dirs) {
+      const item = document.createElement('div');
+      item.className = 'dir-item';
+      item.innerHTML = `<span class="di">📁</span><span>${name}</span>`;
+      item.onclick   = () => {
+        const sep  = path.endsWith('/') || path.endsWith('\\') ? '' : '/';
+        const next = path + sep + name;
+        loadBrowse(next);
+      };
+      list.appendChild(item);
+    }
+  } catch (e) {
+    document.getElementById('browse-list').innerHTML =
+      `<div style="padding:14px 12px;font-size:12px;color:var(--red)">Cannot open folder: ${e.message}</div>`;
+  }
+}
+
+function browseUp() {
+  const p = _browseCurrent.replace(/\\/g, '/').replace(/\/$/, '');
+  const parts = p.split('/');
+  if (parts.length <= 1) return;
+  const parent = parts.slice(0, -1).join('/') || parts[0] + '/';
+  loadBrowse(parent);
+}
+
+function confirmBrowse() {
+  const el = document.getElementById(_browseTarget);
+  if (el) {
+    el.value = _browseCurrent;
+    if (_browseIsMedia) updateFolderCmd();
+  }
+  closeBrowser();
 }
 
 // ── Wizard reconnect after self-restart ──────────────────────────────────────
