@@ -2,7 +2,7 @@
 setlocal enabledelayedexpansion
 title Plex Stack Installer
 
-set "REPO_URL=https://github.com/Bash-Sudo/plex-stack.git"
+set "REPO_URL=https://github.com/Bash-Sudo/Plex-Stack.git"
 set "DEFAULT_DIR=%USERPROFILE%\Plex-Stack"
 
 cls
