@@ -867,7 +867,7 @@ async function saveSettings() {
 }
 async function saveAndDeploy() {
   const ok = await saveSettings();
-  if (ok) runCompose('deploy');
+  if (ok) runCompose('restart');
 }
 
 // ── Wizard ───────────────────────────────────────────────────────────────────
