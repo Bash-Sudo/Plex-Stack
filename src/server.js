@@ -26,7 +26,12 @@ function getBody(req) {
 
 function serveFile(res, filePath, type) {
   try {
-    res.writeHead(200, { 'Content-Type': type });
+    const isHtml = type.includes('html');
+    res.writeHead(200, {
+      'Content-Type': type,
+      // Never cache HTML so wizard/dashboard changes always load fresh
+      ...(isHtml ? { 'Cache-Control': 'no-store' } : { 'Cache-Control': 'public, max-age=3600' }),
+    });
     res.end(fs.readFileSync(filePath));
   } catch {
     res.writeHead(404);
