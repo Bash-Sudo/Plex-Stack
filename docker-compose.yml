@@ -123,6 +123,7 @@ services:
       - WIREGUARD_ENDPOINT_IP=${WIREGUARD_ENDPOINT_IP}
       - WIREGUARD_ENDPOINT_PORT=${WIREGUARD_ENDPOINT_PORT:-51820}
       - TZ=${TZ:-UTC}
+      - FIREWALL_INPUT_PORTS=8080
     ports:
       - 8080:8080     # qBittorrent WebUI (exposed via gluetun)
       - 6881:6881
