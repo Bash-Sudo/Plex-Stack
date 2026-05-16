@@ -12,7 +12,7 @@
 
 ## What Is Plex Stack?
 
-Plex Stack bundles eleven services into a single installer. You get Plex for streaming, automatic movie and TV-show downloading, a request portal for family and friends, analytics, and a browser-based control panel — all managed from one dashboard at **http://localhost:7979**.
+Plex Stack bundles nine services into a single installer. You get Plex for streaming, automatic movie and TV-show downloading, a request portal for family and friends, analytics, and a browser-based control panel — all managed from one dashboard at **http://localhost:7979**.
 
 ---
 
@@ -26,9 +26,7 @@ Plex Stack bundles eleven services into a single installer. You get Plex for str
 | **Prowlarr** | 9696 | Central indexer manager — feeds Radarr and Sonarr |
 | **qBittorrent** | 8080 | Download client |
 | **Tautulli** | 8181 | Plex statistics, watch history, and notifications |
-| **Autobrr** | 7474 | Grabs new torrents the moment they appear on IRC |
 | **Seerr** | 5055 | Request portal — lets family and friends ask for titles |
-| **Wizarr** | 5690 | Invite manager — sends Plex invite links |
 | **Prefetcharr** | — | Pre-downloads the next episode while you watch |
 | **Control Panel** | 7979 | Browser dashboard for all of the above |
 

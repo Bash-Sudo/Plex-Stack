@@ -72,20 +72,6 @@ services:
       - 9696:9696
     restart: unless-stopped
 
-  # ── Autobrr — instant torrent grabber ─────────────────────────────────────
-  autobrr:
-    image: ghcr.io/autobrr/autobrr:latest
-    container_name: autobrr
-    environment:
-      - TZ=${TZ:-UTC}
-      - PUID=${PUID:-1000}
-      - PGID=${PGID:-1000}
-    volumes:
-      - ${BASE_PATH:-/tmp}/autobrr/config:/config
-    ports:
-      - 7474:7474
-    restart: unless-stopped
-
   # ── Seerr — media request portal ──────────────────────────────────────────
   seerr:
     image: ghcr.io/seerr-team/seerr:latest
@@ -135,16 +121,6 @@ services:
       - ${BASE_PATH:-/tmp}/tautulli/config:/config
     ports:
       - 8181:8181
-    restart: unless-stopped
-
-  # ── Wizarr — invite link generator ────────────────────────────────────────
-  wizarr:
-    image: ghcr.io/wizarrrr/wizarr:latest
-    container_name: wizarr
-    ports:
-      - 5690:5690
-    volumes:
-      - ${BASE_PATH:-/tmp}/wizarr/data/database:/data/database
     restart: unless-stopped
 
   # ── Prefetcharr — auto-download next episode ───────────────────────────────
