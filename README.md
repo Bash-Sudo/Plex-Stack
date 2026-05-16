@@ -79,10 +79,9 @@ The wizard opens at **http://localhost:7979** and walks you through every step:
 | **1 — System** | Timezone and GPU are auto-detected — just confirm |
 | **2 — Folders** | Choose where your media lives (auto-filled defaults are fine) |
 | **3 — VPN** | Optional — enable if you want VPN on your download client |
-| **4 — Plex Claim** | Paste a one-time token to link Plex to your account |
 | **Deploy Phase 1** | All services except Plex start — watch the progress bar |
-| **5 — API Keys** | Connect Radarr, Sonarr, and Plex together |
-| **6 — Plex Claim** | Get your claim token right before clicking Deploy |
+| **4 — API Keys** | Connect Radarr, Sonarr, and Plex together |
+| **5 — Plex Claim** | Get your claim token right before clicking Deploy |
 | **Deploy Phase 2** | Plex starts — redirected to your live dashboard |
 
 > **Plex Claim Token:** Get it from [plex.tv/claim](https://www.plex.tv/claim) right before clicking Deploy — it expires in 4 minutes. This is a one-time setup token, different from your regular Plex Token.
@@ -115,6 +114,89 @@ Inside Docker containers your Videos folder is mounted at /data. Whenever any se
 | TV Shows | C:\Users\...\Videos\media\tv | /data/media/tv |
 | Movie downloads | C:\Users\...\Videos\downloads\movies | /data/downloads/movies |
 | TV downloads | C:\Users\...\Videos\downloads\tv | /data/downloads/tv |
+
+---
+
+## VPN Setup (Optional but Recommended)
+
+Plex Stack routes qBittorrent through a VPN using [Gluetun](https://github.com/qdm12/gluetun) — a VPN sidecar container that supports ProtonVPN, Mullvad, NordVPN, and most other providers via WireGuard.
+
+The setup wizard will ask whether you want VPN enabled. If you say yes, you need a WireGuard config file from your VPN provider before deploying.
+
+---
+
+### Getting a WireGuard Config from ProtonVPN
+
+1. Log in at [account.proton.me](https://account.proton.me)
+2. Go to **VPN → Downloads → WireGuard configuration**
+3. Choose:
+   - Platform: **Router**
+   - Options: VPN Accelerator ON, NetShield as preferred, NAT-PMP OFF
+   - Select a server (any country — pick one geographically close for speed)
+4. Download the `.conf` file
+
+The file looks like this:
+
+```ini
+[Interface]
+PrivateKey = abc123...
+Address = 10.2.0.2/32
+DNS = 1.1.1.1, 8.8.8.8
+
+[Peer]
+PublicKey = xyz789...
+AllowedIPs = 0.0.0.0/0
+Endpoint = 89.222.98.37:51820
+```
+
+---
+
+### Adding Your VPN Keys to .env
+
+Open your `.env` file (in your Plex-Stack folder) and fill in the values from the `.conf` file:
+
+| .env Variable | Where to find it in the .conf |
+|---|---|
+| `WIREGUARD_PRIVATE_KEY` | `[Interface]` → `PrivateKey` |
+| `WIREGUARD_PUBLIC_KEY` | `[Peer]` → `PublicKey` |
+| `WIREGUARD_ADDRESSES` | `[Interface]` → `Address` (usually `10.2.0.2/32`) |
+| `WIREGUARD_ENDPOINT_IP` | `[Peer]` → `Endpoint` — the IP before the colon |
+| `WIREGUARD_ENDPOINT_PORT` | `[Peer]` → `Endpoint` — the number after the colon (usually `51820`) |
+
+Example:
+
+```env
+WIREGUARD_PRIVATE_KEY=qJbkvifF3f+ePqhnmRlySUPhqX/vQEOfDp95gREWb3A=
+WIREGUARD_PUBLIC_KEY=bJvDSHk5/d+ZsKjZnCbikfvc5Rt0FvOtkOgdyj78bjk=
+WIREGUARD_ADDRESSES=10.2.0.2/32
+WIREGUARD_ENDPOINT_IP=89.222.98.37
+WIREGUARD_ENDPOINT_PORT=51820
+```
+
+> Keep your `.env` file private — it contains your VPN private key. It is already listed in `.gitignore` so it will never be accidentally committed to GitHub.
+
+---
+
+### Confirming the VPN is Working
+
+After the stack is running, verify qBittorrent's traffic is going through the VPN:
+
+```powershell
+docker exec gluetun sh -c "wget -q -O- https://ipinfo.io"
+```
+
+The IP address in the output should be your VPN server's IP — not your home IP. If it matches your home IP the VPN is not connected — check `docker logs gluetun` for errors.
+
+---
+
+### Mullvad and Other Providers
+
+Gluetun supports many providers. For Mullvad:
+
+1. Log in at [mullvad.net](https://mullvad.net) → **Servers → WireGuard configuration generator**
+2. Download the `.conf` file and extract the same five values as above
+
+For other providers see the [Gluetun documentation](https://github.com/qdm12/gluetun/wiki).
 
 ---
 
@@ -166,7 +248,7 @@ Prowlarr manages all your indexers and automatically shares them with Radarr and
 
 Then add indexers under **Indexers > Add Indexer**. Any indexers you add here automatically appear in Radarr and Sonarr.
 
-> Use Docker service names (`radarr`, `sonarr`, `qbit-vpn`) as hostnames — not `localhost`.
+> Use Docker service names (`radarr`, `sonarr`, `gluetun`) as hostnames — not `localhost`.
 
 ---
 
@@ -180,7 +262,7 @@ Then add indexers under **Indexers > Add Indexer**. Any indexers you add here au
 
 | Field | Value |
 |---|---|
-| Host | `qbit-vpn` |
+| Host | `gluetun` |
 | Port | `8080` |
 | Category | `radarr` |
 | Username | `admin` |
@@ -190,7 +272,7 @@ Then add indexers under **Indexers > Add Indexer**. Any indexers you add here au
 
 | Field | Value |
 |---|---|
-| Host | `qbit-vpn` |
+| Host | `gluetun` |
 | Remote Path | `/downloads` |
 | Local Path | `/data/downloads` |
 
@@ -214,7 +296,7 @@ Once a download finishes, Radarr automatically moves it from `/data/downloads/ra
 
 | Field | Value |
 |---|---|
-| Host | `qbit-vpn` |
+| Host | `gluetun` |
 | Port | `8080` |
 | Category | `sonarr` |
 | Username | `admin` |
@@ -224,7 +306,7 @@ Once a download finishes, Radarr automatically moves it from `/data/downloads/ra
 
 | Field | Value |
 |---|---|
-| Host | `qbit-vpn` |
+| Host | `gluetun` |
 | Remote Path | `/downloads` |
 | Local Path | `/data/downloads` |
 
@@ -305,7 +387,7 @@ Use Docker service names as hostnames, not localhost:
 
 | Service | Hostname to use |
 |---|---|
-| qBittorrent | qbit-vpn:8080 |
+| qBittorrent | gluetun:8080 |
 | Radarr | radarr:7878 |
 | Sonarr | sonarr:8989 |
 | Prowlarr | prowlarr:9696 |
