@@ -317,6 +317,3 @@ Open http://localhost:7979 for the control panel.
 
 ---
 
-## Credits
-
-Based on [DonMcD's Ultimate Plex Stack](https://github.com/DonMcD/ultimate-plex-stack), extended with a browser-based control panel, guided setup wizard, automated Windows installer, live container monitoring, and NVIDIA GPU support.
