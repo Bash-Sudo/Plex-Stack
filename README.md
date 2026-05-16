@@ -209,7 +209,7 @@ After the wizard completes configure each service in this order.
 The image generates a random temporary password on first start. Find it with:
 
 ```powershell
-docker logs qbit-vpn 2>&1 | Select-String "password"
+docker logs qbittorrent 2>&1 | Select-String "password"
 ```
 
 Look for a line like:
@@ -248,7 +248,7 @@ Prowlarr manages all your indexers and automatically shares them with Radarr and
 
 Then add indexers under **Indexers > Add Indexer**. Any indexers you add here automatically appear in Radarr and Sonarr.
 
-> Use Docker service names (`radarr`, `sonarr`, `gluetun`) as hostnames — not `localhost`.
+> Use Docker service names (`radarr`, `sonarr`, `qbittorrent`) as hostnames — not `localhost`.
 
 ---
 
@@ -262,7 +262,7 @@ Then add indexers under **Indexers > Add Indexer**. Any indexers you add here au
 
 | Field | Value |
 |---|---|
-| Host | `gluetun` |
+| Host | `qbittorrent` |
 | Port | `8080` |
 | Category | `radarr` |
 | Username | `admin` |
@@ -272,7 +272,7 @@ Then add indexers under **Indexers > Add Indexer**. Any indexers you add here au
 
 | Field | Value |
 |---|---|
-| Host | `gluetun` |
+| Host | `qbittorrent` |
 | Remote Path | `/downloads` |
 | Local Path | `/data/downloads` |
 
@@ -296,7 +296,7 @@ Once a download finishes, Radarr automatically moves it from `/data/downloads/ra
 
 | Field | Value |
 |---|---|
-| Host | `gluetun` |
+| Host | `qbittorrent` |
 | Port | `8080` |
 | Category | `sonarr` |
 | Username | `admin` |
@@ -306,7 +306,7 @@ Once a download finishes, Radarr automatically moves it from `/data/downloads/ra
 
 | Field | Value |
 |---|---|
-| Host | `gluetun` |
+| Host | `qbittorrent` |
 | Remote Path | `/downloads` |
 | Local Path | `/data/downloads` |
 
@@ -379,7 +379,7 @@ Click the "Already configured? Go to Dashboard" button on the wizard welcome pag
 **qBittorrent password unknown**
 
 ```powershell
-docker logs qbit-vpn 2>&1 | Select-String "password"
+docker logs qbittorrent 2>&1 | Select-String "password"
 ```
 
 **Services show connection errors to each other**
@@ -387,7 +387,7 @@ Use Docker service names as hostnames, not localhost:
 
 | Service | Hostname to use |
 |---|---|
-| qBittorrent | gluetun:8080 |
+| qBittorrent | qbittorrent:8080 |
 | Radarr | radarr:7878 |
 | Sonarr | sonarr:8989 |
 | Prowlarr | prowlarr:9696 |
