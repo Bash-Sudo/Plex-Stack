@@ -126,6 +126,9 @@ services:
       - FIREWALL_INPUT_PORTS=8080,6881
       - DOT=on
       - DOT_PROVIDERS=cloudflare
+      - BLOCK_MALICIOUS=off
+      - BLOCK_SURVEILLANCE=off
+      - BLOCK_ADS=off
     ports:
       - 8080:8080     # qBittorrent WebUI (exposed via gluetun)
       - 6881:6881
