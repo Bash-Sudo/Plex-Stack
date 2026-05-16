@@ -2,6 +2,7 @@
 .env
 prefetcharr/config.toml
 prefetcharr/logs/
+.claude
 
 # Node
 node_modules/
