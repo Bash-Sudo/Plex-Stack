@@ -42,7 +42,23 @@ No prior Docker, Git, or server experience required.
 
 ---
 
-## Installation (Windows)
+## Installation — macOS and Linux
+
+Make sure you have [Docker](https://docs.docker.com/get-docker/) and [Git](https://git-scm.com/) installed, then run:
+
+```bash
+git clone https://github.com/Bash-Sudo/Plex-Stack.git
+cd Plex-Stack
+docker compose up -d --build
+```
+
+Open **http://localhost:7979** and the setup wizard will launch automatically.
+
+➡️ [Skip to the Setup Wizard](#setup-wizard)
+
+---
+
+## Installation — Windows
 
 ### Step 1 — Download the Installer
 
@@ -67,7 +83,9 @@ Set-ExecutionPolicy Bypass -Scope Process -Force; .\Windows_Install.ps1
 
 If a restart is needed the installer tells you clearly. Restart, run it again, and it picks up where it left off. A **Start Plex Stack** shortcut is created on your Desktop.
 
-### Step 3 — Setup Wizard
+---
+
+## Setup Wizard
 
 The wizard opens at **http://localhost:7979** and walks you through every step:
 
@@ -302,18 +320,6 @@ cd C:\Users\USERNAME\Plex-Stack
 git pull
 docker compose up -d --build plex-control
 ```
-
----
-
-## Linux and macOS
-
-```bash
-git clone https://github.com/Bash-Sudo/Plex-Stack.git
-cd Plex-Stack
-docker compose up -d --build
-```
-
-Open http://localhost:7979 for the control panel.
 
 ---
 
