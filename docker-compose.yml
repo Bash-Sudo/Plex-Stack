@@ -104,52 +104,19 @@ services:
       - 5055:5055
     restart: unless-stopped
 
-  # ── Gluetun — VPN container ───────────────────────────────────────────────
-  # Supports any provider with a WireGuard config (ProtonVPN, Mullvad, etc.)
-  # Extract values from your .conf file and add to .env — keys stay gitignored
-  gluetun:
-    image: qmcgaw/gluetun:latest
-    container_name: gluetun
-    cap_add:
-      - NET_ADMIN
-    devices:
-      - /dev/net/tun:/dev/net/tun
-    environment:
-      - VPN_SERVICE_PROVIDER=custom
-      - VPN_TYPE=wireguard
-      - WIREGUARD_PRIVATE_KEY=${WIREGUARD_PRIVATE_KEY}
-      - WIREGUARD_PUBLIC_KEY=${WIREGUARD_PUBLIC_KEY}
-      - WIREGUARD_ADDRESSES=${WIREGUARD_ADDRESSES:-10.2.0.2/32}
-      - WIREGUARD_ENDPOINT_IP=${WIREGUARD_ENDPOINT_IP}
-      - WIREGUARD_ENDPOINT_PORT=${WIREGUARD_ENDPOINT_PORT:-51820}
-      - TZ=${TZ:-UTC}
-      - FIREWALL_INPUT_PORTS=8080,6881
-      - DOT=on
-      - DOT_PROVIDERS=cloudflare
-      - BLOCK_MALICIOUS=off
-      - BLOCK_SURVEILLANCE=off
-      - BLOCK_ADS=off
-    ports:
-      - 8080:8080     # qBittorrent WebUI (exposed via gluetun)
-      - 6881:6881
-      - 6881:6881/udp
-    volumes:
-      - ${BASE_PATH:-/tmp}/gluetun:/gluetun
-    restart: unless-stopped
-
   # ── qBittorrent ───────────────────────────────────────────────────────────
-  # Routes all traffic through gluetun VPN — WebUI still accessible at :8080
   qbit-vpn:
     image: lscr.io/linuxserver/qbittorrent:latest
     container_name: qbit-vpn
-    network_mode: "service:gluetun"
-    depends_on:
-      - gluetun
     environment:
       - PUID=${PUID:-1000}
       - PGID=${PGID:-1000}
       - TZ=${TZ:-UTC}
       - WEBUI_PORT=8080
+    ports:
+      - 8080:8080
+      - 6881:6881
+      - 6881:6881/udp
     volumes:
       - ${BASE_PATH:-/tmp}/qbittorrent/config:/config
       - ${MEDIA_SHARE:-/tmp}:/data
