@@ -12,7 +12,7 @@
 
 ## What Is Plex Stack?
 
-Plex Stack bundles nine services into a single installer. You get Plex for streaming, automatic movie and TV-show downloading, a request portal for family and friends, analytics, and a browser-based control panel — all managed from one dashboard at **http://localhost:7979**.
+Plex Stack bundles eight services into a single installer. You get Plex for streaming, automatic movie and TV-show downloading, a request portal for family and friends, analytics, and a browser-based control panel — all managed from one dashboard at **http://localhost:7979**.
 
 ---
 
@@ -27,7 +27,6 @@ Plex Stack bundles nine services into a single installer. You get Plex for strea
 | **qBittorrent** | 8080 | Download client |
 | **Tautulli** | 8181 | Plex statistics, watch history, and notifications |
 | **Seerr** | 5055 | Request portal — lets family and friends ask for titles |
-| **Prefetcharr** | — | Pre-downloads the next episode while you watch |
 | **Control Panel** | 7979 | Browser dashboard for all of the above |
 
 ---
@@ -329,7 +328,7 @@ Open **http://localhost:5055** and follow the setup:
 
 ## Finding Your Plex Token
 
-Some services like Prefetcharr need your permanent Plex authentication token. Find it in this file:
+To find your permanent Plex authentication token, look in this file:
 
 ```
 C:\Users\USERNAME\AppData\Local\Plex-Stack\plex\config\Library\Application Support\Plex Media Server\Preferences.xml
@@ -415,7 +414,6 @@ docker compose up -d --build plex-control
 ```bash
 git clone https://github.com/Bash-Sudo/Plex-Stack.git
 cd Plex-Stack
-cp prefetcharr/config.example.toml prefetcharr/config.toml
 docker compose up -d --build
 ```
 

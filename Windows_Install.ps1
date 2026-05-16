@@ -120,9 +120,6 @@ if (Test-Path (Join-Path $scriptDir "docker-compose.yml")) {
     if ($LASTEXITCODE -ne 0 -or -not (Test-Path (Join-Path $INSTALL_DIR "docker-compose.yml"))) {
         Exit-Err "Download failed. Check your internet connection."
     }
-    $ex=Join-Path $INSTALL_DIR "prefetcharr\config.example.toml"
-    $tg=Join-Path $INSTALL_DIR "prefetcharr\config.toml"
-    if ((Test-Path $ex) -and -not (Test-Path $tg)) { Copy-Item $ex $tg }
     Write-OK "Plex Stack downloaded"
 }
 Set-Location $INSTALL_DIR

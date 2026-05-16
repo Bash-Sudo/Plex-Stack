@@ -123,15 +123,6 @@ services:
       - 8181:8181
     restart: unless-stopped
 
-  # ── Prefetcharr — auto-download next episode ───────────────────────────────
-  prefetcharr:
-    image: phueber/prefetcharr:latest
-    container_name: prefetcharr
-    volumes:
-      - ./prefetcharr/config.toml:/config
-      - ./prefetcharr/logs:/log
-    restart: unless-stopped
-
   # ── Plex Stack Control Panel ───────────────────────────────────────────────
   # First run: only this container starts (via Windows_Install.bat)
   # It serves the setup wizard at http://localhost:7979

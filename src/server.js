@@ -175,7 +175,6 @@ const server = http.createServer(async (req, res) => {
     try {
       const values = JSON.parse(await getBody(req));
       fs.writeFileSync(ENV_FILE, buildEnvContent(values), 'utf8');
-      writePrefetcharrConfig(values);
       return json(res, 200, { ok: true });
     } catch (e) {
       return json(res, 500, { ok: false, error: e.message });
@@ -355,26 +354,7 @@ const server = http.createServer(async (req, res) => {
 
 // ── Start ─────────────────────────────────────────────────────────────────────
 
-function ensurePrefetcharrConfig() {
-  // Docker bind-mounts need a FILE to exist before container start.
-  // If config.toml is missing, Docker creates it as a directory — breaking prefetcharr.
-  // Copy the example on startup to prevent this.
-  const config  = path.join(CWD, 'prefetcharr', 'config.toml');
-  const example = path.join(CWD, 'prefetcharr', 'config.example.toml');
-  try {
-    const stat = fs.existsSync(config) && fs.statSync(config);
-    if (!stat || stat.isDirectory()) {
-      if (stat && stat.isDirectory()) fs.rmdirSync(config);  // remove wrongly-created dir
-      if (fs.existsSync(example)) {
-        fs.copyFileSync(example, config);
-        console.log('  Created prefetcharr/config.toml from example');
-      }
-    }
-  } catch (e) { console.warn('  Could not ensure prefetcharr config:', e.message); }
-}
-
 function start() {
-  ensurePrefetcharrConfig();
   refreshStatus();
   setInterval(refreshStatus, 10_000);
 
@@ -388,44 +368,6 @@ function start() {
     else console.error(e.message);
     process.exit(1);
   });
-}
-
-// ── Prefetcharr config.toml writer ───────────────────────────────────────────
-
-function writePrefetcharrConfig(values) {
-  const configPath = path.join(CWD, 'prefetcharr', 'config.toml');
-  try {
-    if (!fs.existsSync(path.dirname(configPath))) return;
-    const plexToken = values.PLEX_TOKEN || '';
-    const sonarrKey = values.SONARR_KEY || '';
-    const content = [
-      '# Prefetcharr — auto-written by Plex Stack Control Panel',
-      '# Edit via Settings in the control panel, then restart prefetcharr.',
-      '',
-      'interval            = 900',
-      'log_dir             = "/log"',
-      'log_level           = "Info"',
-      'prefetch_num        = 2',
-      'request_seasons     = true',
-      'append_to_queue     = false',
-      'connection_retries  = 6',
-      '',
-      '[media_server]',
-      'type    = "Plex"',
-      'url     = "http://plex:32400"',
-      `api_key = "${plexToken}"`,
-      '',
-      '# users     = [ "Jason" ]',
-      '# libraries = [ "TV Shows" ]',
-      '',
-      '[sonarr]',
-      'url     = "http://sonarr:8989"',
-      `api_key = "${sonarrKey}"`,
-      '',
-      '# exclude_tag = "no_prefetch"',
-    ].join('\n') + '\n';
-    fs.writeFileSync(configPath, content, 'utf8');
-  } catch {}
 }
 
 module.exports = { start };

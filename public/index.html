@@ -676,13 +676,12 @@ const URLS = {
 const NAMES = {
   plex:'Plex', radarr:'Radarr', sonarr:'Sonarr', prowlarr:'Prowlarr',
   seerr:'Seerr / Overseerr', qbittorrent:'qBittorrent',
-  tautulli:'Tautulli', prefetcharr:'Prefetcharr',
+  tautulli:'Tautulli',
 };
 const DESCS = {
   plex:'Media server', radarr:'Movie automation', sonarr:'TV automation',
   prowlarr:'Indexer manager', seerr:'Request portal', qbittorrent:'Download client',
   tautulli:'Plex analytics',
-  prefetcharr:'Next-ep fetcher',
 };
 const WFIELDS = ['PUID','PGID','TZ','BASE_PATH','MEDIA_SHARE','PLEX_CLAIM','PLEX_URL','PLEX_TOKEN','VPN_ENABLED','VPN_USER','VPN_PASS','VPN_PROV','VPN_CLIENT','LAN_NETWORK','SERVER_IP','SONARR_KEY','RADARR_KEY'];
 const SFIELDS = WFIELDS.map(k => 's-' + k).concat(['s-GPU_PROVIDER']);

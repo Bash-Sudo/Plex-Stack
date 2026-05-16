@@ -196,7 +196,7 @@ async function getWindowsUsername() {
 // Services in each deploy phase.
 // Phase 1: everything EXCEPT plex — plex-control never restarts, SSE stays alive.
 // Phase 2: plex only (with claim token already in .env).
-const PHASE1       = ['radarr','sonarr','prowlarr','seerr','qbittorrent','tautulli','prefetcharr'];
+const PHASE1       = ['radarr','sonarr','prowlarr','seerr','qbittorrent','tautulli'];
 const PHASE2       = ['plex'];
 // All services except plex-control — used by dashboard Restart/Update so we never kill ourselves.
 const ALL_SERVICES = [...PHASE1, ...PHASE2];
