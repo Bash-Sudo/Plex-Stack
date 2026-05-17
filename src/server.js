@@ -232,6 +232,7 @@ const server = http.createServer(async (req, res) => {
       }
       if (action === 'phase2') {
         const code = await docker.runPhase(2, l => send('log', { line: l }));
+        if (code === 0) await fetchPlexToken(send);
         return finish(code);
       }
       // restart: restart all services EXCEPT plex-control so we don't kill ourselves
@@ -351,6 +352,45 @@ const server = http.createServer(async (req, res) => {
   res.writeHead(404);
   res.end('Not found');
 });
+
+// ── Plex token auto-fetch ─────────────────────────────────────────────────────
+// After Phase 2 deploys Plex, poll Preferences.xml until PlexOnlineToken appears
+// then write it into .env automatically.
+
+function fetchPlexToken(send) {
+  const prefsPath = '/mnt/config/plex/config/Library/Application Support/Plex Media Server/Preferences.xml';
+  const MAX   = 36;   // 36 × 5s = 3 minutes
+  let attempt = 0;
+
+  return new Promise(resolve => {
+    const poll = () => {
+      attempt++;
+      try {
+        if (fs.existsSync(prefsPath)) {
+          const xml   = fs.readFileSync(prefsPath, 'utf8');
+          const match = xml.match(/PlexOnlineToken="([^"]+)"/);
+          if (match && match[1]) {
+            const token  = match[1];
+            const values = { ...parseEnv(ENV_FILE), PLEX_TOKEN: token };
+            fs.writeFileSync(ENV_FILE, buildEnvContent(values), 'utf8');
+            send('log', { line: `✅ Plex token saved to .env automatically.` });
+            return resolve(token);
+          }
+        }
+      } catch {}
+
+      if (attempt < MAX) {
+        setTimeout(poll, 5000);
+      } else {
+        send('log', { line: `⚠️  Plex token not found — add PLEX_TOKEN manually in Settings.` });
+        resolve(null);
+      }
+    };
+    // Give Plex 15s head start before first check
+    send('log', { line: '🔑 Waiting for Plex to initialize and save its token...' });
+    setTimeout(poll, 15000);
+  });
+}
 
 // ── Start ─────────────────────────────────────────────────────────────────────
 
